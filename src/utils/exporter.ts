@@ -1,18 +1,17 @@
 import dayjs from "dayjs";
 import { saveAs } from 'file-saver';
-import { CharItem, LogItem, packNameId } from "~/logManager/types";
+import { AlignmentType, Document, Packer, Paragraph, TextRun } from 'docx';
+import { LogItem } from "~/logManager/types";
 import { useStore } from "~/store";
 
 // TODO: 移植到logMan/exporters
 export function exportFileQQ(results: LogItem[], options: any = undefined) {
   const store = useStore();
-  const map = store.pcMap;
 
   let text = ''
   for (let i of results) {
     if (i.isRaw) continue;
-    const id = packNameId(i);
-    if (map.get(id)?.role === '隐藏') continue;
+    if (store.isHiddenLogItem(i)) continue;
 
     let timeText = i.time.toString()
     if (typeof i.time === 'number') {
@@ -34,13 +33,11 @@ export function exportFileQQ(results: LogItem[], options: any = undefined) {
 
 export function exportFileIRC(results: LogItem[], options: any = undefined) {
   const store = useStore();
-  const map = store.pcMap;
 
   let text = ''
   for (let i of results) {
     if (i.isRaw) continue;
-    const id = packNameId(i);
-    if (map.get(id)?.role === '隐藏') continue;
+    if (store.isHiddenLogItem(i)) continue;
 
     let timeText = i.time.toString()
     if (typeof i.time === 'number') {
@@ -96,4 +93,117 @@ Content-Type: text/xml; charset="utf-8"
 
   saveAs(new Blob([text],  {type: "application/msword"}), '跑团记录.doc')
   return text
+}
+
+export interface DocxExportEntry {
+  time?: string;
+  timeColor?: string;
+  nickname?: string;
+  nicknameColor?: string;
+  messageLines: string[];
+  messageColor?: string;
+}
+
+function colorToDocx(color?: string): string | undefined {
+  if (!color) return undefined;
+  let value = color.trim();
+  if (!value) return undefined;
+  if (value.startsWith('#')) {
+    value = value.slice(1);
+    if (value.length === 3) {
+      value = value.split('').map((char) => char + char).join('');
+    }
+    return value.toUpperCase();
+  }
+  const rgbMatch = value.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (rgbMatch) {
+    const hex = rgbMatch.slice(1, 4).map((segment) => {
+      const n = Number(segment);
+      if (Number.isNaN(n) || n < 0) {
+        return '00';
+      }
+      return Math.min(255, n).toString(16).padStart(2, '0');
+    }).join('');
+    return hex.toUpperCase();
+  }
+  return undefined;
+}
+
+function buildDocxParagraphs(entry: DocxExportEntry): Paragraph[] {
+  const lines = entry.messageLines && entry.messageLines.length > 0 ? [...entry.messageLines] : [''];
+  const firstLine = lines.shift() ?? '';
+  const timeText = (entry.time ?? '').trim();
+  const nicknameText = (entry.nickname ?? '').trim();
+
+  const timeColor = colorToDocx(entry.timeColor) ?? '666666';
+  const nicknameColor = colorToDocx(entry.nicknameColor) ?? colorToDocx(entry.messageColor) ?? '333333';
+  const messageColor = colorToDocx(entry.messageColor) ?? nicknameColor;
+
+  const runs: TextRun[] = [];
+
+  if (timeText) {
+    runs.push(new TextRun({ text: timeText, color: timeColor }));
+  }
+  if (timeText && (nicknameText || firstLine)) {
+    runs.push(new TextRun({ text: ' ' }));
+  }
+  if (nicknameText) {
+    runs.push(new TextRun({ text: nicknameText, color: nicknameColor }));
+  }
+  if (nicknameText && firstLine) {
+    runs.push(new TextRun({ text: ' ' }));
+  }
+  if (firstLine) {
+    runs.push(new TextRun({ text: firstLine, color: messageColor }));
+  }
+
+  if (runs.length === 0) {
+    runs.push(new TextRun({ text: '' }));
+  }
+
+  const continuationIndentTwip = 800; // ~=0.55in -> roughly 3.75 monospace characters
+
+  const paragraphs: Paragraph[] = [
+    new Paragraph({
+      children: runs,
+      spacing: { after: 120 },
+      alignment: AlignmentType.LEFT,
+    }),
+  ];
+
+  lines.forEach((line) => {
+    const childRun = line
+      ? new TextRun({ text: line, color: messageColor })
+      : new TextRun({ text: '' });
+
+    paragraphs.push(new Paragraph({
+      children: [childRun],
+      indent: { left: continuationIndentTwip },
+      spacing: { after: 120 },
+      alignment: AlignmentType.LEFT,
+    }));
+  });
+
+  return paragraphs;
+}
+
+export function exportFileDocx(entries: DocxExportEntry[], filename = '跑团记录.docx') {
+  const children = entries.length > 0
+    ? entries.flatMap((entry) => buildDocxParagraphs(entry))
+    : [new Paragraph({ children: [new TextRun({ text: '' })], alignment: AlignmentType.LEFT })];
+
+  const document = new Document({
+    sections: [
+      {
+        properties: {},
+        children,
+      },
+    ],
+  });
+
+  return Packer.toBlob(document)
+    .then((blob) => {
+      saveAs(blob, filename);
+      return blob;
+    });
 }

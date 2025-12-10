@@ -4,7 +4,7 @@
     <!-- {{  source  }} -->
     <span style="color: #aaa" class="_time" v-if="!store.exportOptions.timeHide">{{ timeSolve(source) }}</span>
     <span :style="{ 'color': colorByName(source) }" class="_nickname">{{ nicknameSolve(source) }}</span>
-    <span :style="{ 'color': colorByName(source) }" v-html="previewMessageSolve(source)"></span>
+    <span class="_message" :style="{ 'color': colorByName(source) }" v-html="previewMessageSolve(source)"></span>
   </div>
 </template>
 
@@ -69,8 +69,7 @@ const nameReplace = (msg: string) => {
 let canvasFontSize = '';
 
 const previewMessageSolve = (i: LogItem) => {
-  const id = packNameId(i);
-  if (store.pcMap.get(id)?.role === '隐藏') return '';
+  if (store.isHiddenLogItem(i)) return '';
 
   let msg = msgImageFormat(escapeHTML(i.message), store.exportOptions, true);
   msg = msgAtFormat(msg, store.pcList);

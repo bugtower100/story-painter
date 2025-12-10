@@ -4,12 +4,12 @@
       <n-flex class="py-3 text-2xl" size="large" align="center" justify="center" wrap>
         <n-flex align="center" justify="center">
           <strong>海豹TRPG跑团Log着色器</strong>
-          <n-tag type="success" size="small" :bordered="false">v2.5.2</n-tag>
+          <n-tag type="success" size="small" :bordered="false">v2.5.4</n-tag>
         </n-flex>
         <n-flex align="center" justify="center">
           <n-icon>
             <a href="https://github.com/sealdice/story-painter" target="_blank">
-              <logo-github/>
+              <logo-github />
             </a>
           </n-icon>
           <n-button type="primary" @click="backV1">官网</n-button>
@@ -28,7 +28,7 @@
             <div v-for="(i, index) in store.pcList">
               <div style="display: flex; align-items: center; width: 26rem;">
                 <n-button type="error" size="small" secondary style="padding: 0 1rem " @click="deletePc(index, i)"
-                          :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewTRG">
+                  :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewBBSPineapple || isShowPreviewTRG">
                   <template #icon>
                     <n-icon>
                       <icon-delete></icon-delete>
@@ -37,18 +37,17 @@
                   <span v-if="notMobile">删除</span>
                 </n-button>
 
-                <n-input :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewTRG" v-model:value="i.name"
-                         class="w-50 m-2"
-                         :prefix-icon="User" @focus="nameFocus(i)" @change="nameChanged(i)"/>
+                <n-input :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewBBSPineapple || isShowPreviewTRG"
+                  v-model:value="i.name" class="w-50 m-2" :prefix-icon="User" @focus="nameFocus(i)"
+                  @change="nameChanged(i)" />
 
-                <n-input :disabled="true" v-model:value="i.IMUserId" style="width: 24rem"/>
+                <n-input :disabled="true" v-model:value="i.IMUserId" style="width: 24rem" />
 
                 <n-select v-model:value="i.role" class="m-2 w-60" style="width: 24rem"
-                          :options="[{value: '主持人', label: '主持人'}, {value: '角色', label: '角色'}, {value: '骰子', label: '骰子'}, {value: '隐藏', label: '隐藏'}]"/>
+                  :options="[{ value: '主持人', label: '主持人' }, { value: '角色', label: '角色' }, { value: '骰子', label: '骰子' }, { value: '隐藏', label: '隐藏' }]" />
 
-                <n-color-picker v-model:value="i.color" :show-alpha="false" show-preview
-                                :swatches="colors"
-                                :on-update:value="(v) => colorChanged(v, i)"/>
+                <n-color-picker v-model:value="i.color" :show-alpha="false" show-preview :swatches="colors"
+                  :on-update:value="(v) => colorChanged(v, i)" />
               </div>
             </div>
           </div>
@@ -58,19 +57,19 @@
               <n-button secondary type="primary" @click="exportRecordRaw">下载原始文件</n-button>
               <!-- <n-button secondary type="primary" v-show="false" @click="exportRecordQQ">下载QQ风格记录</n-button>-->
               <!-- <n-button secondary type="primary" v-show="false" @click="exportRecordIRC">下载IRC风格记录</n-button>-->
-              <n-button secondary type="primary" @click="exportRecordDOC">下载Word</n-button>
-              <n-button secondary type="primary" @click="exportRecordTalkDOC">下载对话Word</n-button>
+              <n-button secondary type="primary" @click="exportRecordDOC">下载带图doc</n-button>
+              <n-button secondary type="primary" @click="exportRecordTalkDOC">下载对话doc</n-button>
+              <n-button secondary type="primary" @click="exportRecordDocx">下载docx</n-button>
             </n-flex>
             <!-- <n-button @click="showPreview">预览</n-button> -->
             <div>
-              <n-checkbox label="预览" v-model:checked="isShowPreview" :border="true"
-                          @click="previewClick('preview')"/>
-              <n-checkbox label="论坛代码" v-model:checked="isShowPreviewBBS" :border="true"
-                          @click="previewClick('bbs')"/>
-              <n-checkbox label="回声工坊" v-model:checked="isShowPreviewTRG" :border="true"
-                          @click="previewClick('trg')"/>
+              <n-checkbox label="预览" v-model:checked="isShowPreview" :border="true" @click="previewClick('preview')" />
+              <n-checkbox label="论坛代码" v-model:checked="isShowPreviewBBS" :border="true" @click="previewClick('bbs')" />
+              <n-checkbox label="论坛代码(内容多行)" v-model:checked="isShowPreviewBBSPineapple" :border="true"
+                @click="previewClick('bbspineapple')" />
+              <n-checkbox label="回声工坊" v-model:checked="isShowPreviewTRG" :border="true" @click="previewClick('trg')" />
             </div>
-            <n-divider vertical/>
+            <n-divider vertical />
             <div>
               <n-tooltip class="box-item" placement="top-start">
                 <template #trigger>
@@ -81,9 +80,8 @@
             </div>
           </n-flex>
 
-          <code-mirror v-show="!(isShowPreview || isShowPreviewBBS || isShowPreviewTRG)" ref="editor"
-                       class="mt-4"
-                       @change="onChange">
+          <code-mirror v-show="!(isShowPreview || isShowPreviewBBS || isShowPreviewBBSPineapple || isShowPreviewTRG)"
+            ref="editor" class="mt-4" @change="onChange">
             <div class="z-50 absolute right-2 flex flex-col items-center">
               <div class="">
                 <n-button secondary @click="clearText" id="btnCopyPreviewBBS" type="primary" class="w-full">清空内容
@@ -94,7 +92,7 @@
               </div>
               <div class="mt-1">
                 <n-checkbox label="编辑器染色" v-model:checked="store.doEditorHighlight" :border="false" class="w-full"
-                            @click.native="doEditorHighlightClick($event)"/>
+                  @click.native="doEditorHighlightClick($event)" />
               </div>
             </div>
           </code-mirror>
@@ -102,6 +100,8 @@
           <n-message-provider>
             <preview-main :is-show="isShowPreview" :preview-items="previewItems"></preview-main>
             <preview-bbs :is-show="isShowPreviewBBS" :preview-items="previewItems"></preview-bbs>
+            <preview-bbs-pineapple :is-show="isShowPreviewBBSPineapple"
+              :preview-items="previewItems"></preview-bbs-pineapple>
             <preview-trg :is-show="isShowPreviewTRG" :preview-items="previewItems"></preview-trg>
           </n-message-provider>
         </n-spin>
@@ -115,7 +115,8 @@ import { nextTick, ref, onMounted, watch, h, render, renderList, computed } from
 import { useStore } from './store'
 import CodeMirror from './components/CodeMirror.vue'
 import { debounce, delay } from 'lodash-es'
-import { exportFileRaw, exportFileQQ, exportFileIRC, exportFileDoc } from "./utils/exporter";
+import { exportFileRaw, exportFileQQ, exportFileIRC, exportFileDoc, exportFileDocx } from "./utils/exporter";
+import type { DocxExportEntry } from "./utils/exporter";
 import { strFromU8, unzlibSync } from 'fflate';
 import uaParser from 'ua-parser-js'
 
@@ -124,6 +125,7 @@ import { ViewUpdate } from "@codemirror/view";
 import { TextInfo } from "./logManager/importers/_logImpoter";
 import previewMain from "./components/previews/preview-main.vue";
 import previewBbs from "./components/previews/preview-bbs.vue";
+import previewBbsPineapple from "./components/previews/preview-bbs-pineapple.vue";
 import previewTrg from "./components/previews/preview-trg.vue";
 import PreviewItem from './components/previews/preview-main-item.vue'
 import PreviewTableTR from './components/previews/preview-table-tr.vue'
@@ -162,6 +164,7 @@ const downloadUsableRank = ref(0)
 
 const isShowPreview = ref(false)
 const isShowPreviewBBS = ref(false)
+const isShowPreviewBBSPineapple = ref(false)
 const isShowPreviewTRG = ref(false)
 
 const colors = ref<string[]>([])
@@ -193,20 +196,29 @@ const doFlush = () => {
   logMan.flush();
 }
 
-const previewClick = (mode: 'preview' | 'bbs' | 'trg') => {
+const previewClick = (mode: 'preview' | 'bbs' | 'bbspineapple' | 'trg') => {
   switch (mode) {
     case 'preview':
       isShowPreviewBBS.value = false
+      isShowPreviewBBSPineapple.value = false
       isShowPreviewTRG.value = false
       break;
     case 'bbs':
       isShowPreview.value = false
+      isShowPreviewBBSPineapple.value = false
+      isShowPreviewTRG.value = false
+      store.exportOptions.imageHide = true
+      break;
+    case 'bbspineapple':
+      isShowPreview.value = false
+      isShowPreviewBBS.value = false
       isShowPreviewTRG.value = false
       store.exportOptions.imageHide = true
       break;
     case 'trg':
       isShowPreview.value = false
       isShowPreviewBBS.value = false
+      isShowPreviewBBSPineapple.value = false
       store.exportOptions.imageHide = true
       break;
   }
@@ -225,8 +237,8 @@ function setupUA() {
   if (deviceType.type === 'mobile') {
     // 经测可以使用的
     switch (browser) {
-        // case '360 Browser': // 手机360 但是手机360无特征，自己是Chrome WebView
-        // 手机:X浏览器 Chrome WebView无特征
+      // case '360 Browser': // 手机360 但是手机360无特征，自己是Chrome WebView
+      // 手机:X浏览器 Chrome WebView无特征
       case 'Edge':
       case 'Chrome':
       case 'Chromium':
@@ -240,10 +252,10 @@ function setupUA() {
     switch (browser) {
       case 'baiduboxapp': // 手机:百度浏览器
       case 'QQBrowser': // 手机:搜狗浏览器极速版，手机:QQ浏览器
-        // 手机:万能浏览器，Chrome WebView无特征，会直接崩溃
+      // 手机:万能浏览器，Chrome WebView无特征，会直接崩溃
       case 'UCBrowser': // 手机:UC浏览器
       case 'Quark': // 手机:夸克
-        // 手机:Via浏览器，Chrome WebView无特征，会直接崩溃
+      // 手机:Via浏览器，Chrome WebView无特征，会直接崩溃
       case 'QQ': // 手机:QQ
       case 'WeChat':
         downloadUsableRank.value = 0
@@ -293,12 +305,12 @@ onMounted(async () => {
         updated_at: string,
       }
 
-      switch(record.client) {
-        case 'Parquet' : {
+      switch (record.client) {
+        case 'Parquet': {
           const uint8 = Uint8Array.from(atob(record.data), c => c.charCodeAt(0))
-          const asyncBuffer = await asyncBufferFrom({file: new File([uint8],'default'),byteLength:uint8.byteLength})
+          const asyncBuffer = await asyncBufferFrom({ file: new File([uint8], 'default'), byteLength: uint8.byteLength })
           const res = await parquetReadObjects({
-            file:asyncBuffer,
+            file: asyncBuffer,
             compressors,
           })
           nextTick(() => {
@@ -312,27 +324,27 @@ onMounted(async () => {
               version: 105
             })
             store.pcList.length = 0
-    
+
             logMan.lastText = '';
             logMan.syncChange(text, [0, store.editor.state.doc.length], [0, text.length])
           });
         }
-        break
-        case 'SealDice': 
+          break
+        case 'SealDice':
         default:
-        {
-          const log = unzlibSync(Uint8Array.from(atob(record.data), c => c.charCodeAt(0)));
+          {
+            const log = unzlibSync(Uint8Array.from(atob(record.data), c => c.charCodeAt(0)));
 
-          nextTick(() => {
-            const text = strFromU8(log)
-            store.pcList.length = 0
-    
-            logMan.lastText = '';
-            logMan.syncChange(text, [0, store.editor.state.doc.length], [0, text.length])
+            nextTick(() => {
+              const text = strFromU8(log)
+              store.pcList.length = 0
 
-          });
-        }
-        break
+              logMan.lastText = '';
+              logMan.syncChange(text, [0, store.editor.state.doc.length], [0, text.length])
+
+            });
+          }
+          break
       }
 
 
@@ -407,7 +419,6 @@ function exportRecordDOC() {
     }
   }
 
-  const map = store.pcMap;
   const el = document.createElement('span');
   const elRoot = document.createElement('div');
   const items = [];
@@ -415,8 +426,7 @@ function exportRecordDOC() {
   showPreview()
   for (let i of previewItems.value) {
     if (i.isRaw) continue;
-    const id = packNameId(i);
-    if (map.get(id)?.role === '隐藏') continue;
+    if (store.isHiddenLogItem(i)) continue;
 
     const html = h(PreviewItem, { source: i });
     render(html, el);
@@ -451,16 +461,14 @@ function exportRecordTalkDOC() {
     }
   }
 
-  const map = store.pcMap;
   const el = document.createElement('span');
   const elRoot = document.createElement('div');
-  const items = [];
+  const items: string[] = [];
 
   showPreview()
   for (let i of previewItems.value) {
     if (i.isRaw) continue;
-    const id = packNameId(i);
-    if (map.get(id)?.role === '隐藏') continue;
+    if (store.isHiddenLogItem(i)) continue;
 
     const html = h(PreviewTableTR, { source: i });
     render(html, el);
@@ -472,17 +480,173 @@ function exportRecordTalkDOC() {
   exportFileDoc(`<table style="border-collapse: collapse;"><tbody>${items.join('\n')}</tbody></table>`);
 }
 
+const readElementColor = (el: HTMLElement | null): string | undefined => {
+  if (!el) return undefined;
+  if (el.style && el.style.color) {
+    return el.style.color;
+  }
+  const computed = window.getComputedStyle(el);
+  return computed?.color || undefined;
+};
+
+const extractMessageLines = (el: HTMLElement | null): string[] => {
+  if (!el) return [''];
+  const clone = el.cloneNode(true) as HTMLElement;
+  const doc = el.ownerDocument || document;
+
+  clone.querySelectorAll('img').forEach((img) => {
+    const src = img.getAttribute('src') || '';
+    const placeholder = src ? `[图:${src}]` : '[图:无可用链接]';
+    img.replaceWith(doc.createTextNode(placeholder));
+  });
+
+  const blockTags = new Set(['P', 'DIV', 'LI', 'UL', 'OL', 'BLOCKQUOTE']);
+  const lines: string[] = [];
+  let current = '';
+
+  const pushLine = (forceEmpty = false) => {
+    const normalized = current.replace(/\u00A0/g, ' ').replace(/\s+$/g, '');
+    if (normalized || forceEmpty || lines.length === 0) {
+      lines.push(normalized);
+    }
+    current = '';
+  };
+
+  const appendText = (text: string | null) => {
+    if (!text) return;
+    const normalized = text.replace(/\u00A0/g, ' ');
+    const segments = normalized.split(/\r?\n/);
+    segments.forEach((segment, index) => {
+      current += segment;
+      if (index < segments.length - 1) {
+        pushLine();
+      }
+    });
+  };
+
+  const processNode = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      appendText(node.textContent);
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    const element = node as HTMLElement;
+
+    if (element.tagName === 'BR') {
+      pushLine(true);
+      return;
+    }
+
+    if (blockTags.has(element.tagName)) {
+      if (current) {
+        pushLine();
+      }
+
+      if (element.tagName === 'LI') {
+        const parent = element.parentElement;
+        if (parent?.tagName === 'OL') {
+          const siblings = Array.from(parent.children).filter((child) => child.tagName === 'LI');
+          const index = siblings.indexOf(element);
+          appendText(`${index + 1}. `);
+        } else {
+          appendText('• ');
+        }
+      }
+
+      const before = lines.length;
+      Array.from(element.childNodes).forEach(processNode);
+
+      if (current) {
+        pushLine();
+      } else if (lines.length === before) {
+        pushLine(true);
+      }
+      return;
+    }
+
+    Array.from(element.childNodes).forEach(processNode);
+  };
+
+  Array.from(clone.childNodes).forEach(processNode);
+
+  if (current !== '' || lines.length === 0) {
+    pushLine(lines.length === 0);
+  }
+
+  while (lines.length > 1 && lines[lines.length - 1].trim() === '') {
+    lines.pop();
+  }
+
+  if (lines.length === 0) {
+    lines.push('');
+  }
+
+  return lines;
+};
+
+function exportRecordDocx() {
+  browserAlert()
+  showPreview()
+
+  const entries: DocxExportEntry[] = []
+
+  for (const item of previewItems.value) {
+    if (item.isRaw) continue
+    if (store.isHiddenLogItem(item)) continue
+
+    const mountPoint = document.createElement('div')
+    const vnode = h(PreviewItem, { source: item })
+    render(vnode, mountPoint)
+
+    const host = mountPoint.firstElementChild as HTMLElement | null
+    if (!host) {
+      render(null, mountPoint)
+      continue
+    }
+
+    const timeEl = host.querySelector('._time') as HTMLElement | null
+    const nicknameEl = host.querySelector('._nickname') as HTMLElement | null
+    const messageEl = host.querySelector('._message') as HTMLElement | null
+
+    const entry: DocxExportEntry = {
+      time: (timeEl?.textContent ?? '').trim(),
+      timeColor: readElementColor(timeEl),
+      nickname: (nicknameEl?.textContent ?? '').trim(),
+      nicknameColor: readElementColor(nicknameEl),
+      messageLines: extractMessageLines(messageEl),
+      messageColor: readElementColor(messageEl),
+    }
+
+    entries.push(entry)
+    render(null, mountPoint)
+  }
+
+  if (!entries.length) {
+    message.warning('没有可导出的内容')
+    return
+  }
+
+  exportFileDocx(entries, '跑团记录.docx').catch((err) => {
+    console.error(err)
+    message.error('Docx 导出失败，请稍后重试')
+  })
+}
 
 const previewItems = ref<LogItem[]>([])
 
 function showPreview() {
-  let tmp = []
+  const tmp: LogItem[] = [];
   let index = 0;
   const offTopicHide = store.exportOptions.offTopicHide;
   console.log('当前日志条目数量: ', logMan.curItems.length)
 
   for (let i of logMan.curItems) {
     if (i.isRaw) continue;
+    if (store.isHiddenLogItem(i)) continue;
 
     // // 处理ot
     // if (offTopicHide && !i.isDice) {
@@ -509,6 +673,11 @@ store.colorMapLoad();
 
 // 修改ot选项后重建items
 watch(() => store.exportOptions.offTopicHide, showPreview)
+watch(
+  () => store.pcList.map(pc => `${pc.IMUserId}-${pc.role}-${pc.name}`),
+  () => showPreview(),
+  { deep: false }
+)
 
 const editor = ref()
 watch(isDark, () => {
@@ -530,23 +699,23 @@ const deletePc = (index: number, i: CharItem) => {
     content: `即将删除角色「${i.name}」及其全部发言，确定吗？`,
     footer: () => [
       h(
-          NButton,
-          { type: 'default', onClick: () => m.destroy(), style: { marginRight: '1rem' } },
-          () => '取消',
+        NButton,
+        { type: 'default', onClick: () => m.destroy(), style: { marginRight: '1rem' } },
+        () => '取消',
       ),
       h(
-          NButton,
-          {
-            type: 'primary', onClick: () => {
-              try {
-                store.pcList.splice(index, 1);
-                logMan.deleteByCharItem(i);
-              } finally {
-                m.destroy()
-              }
+        NButton,
+        {
+          type: 'primary', onClick: () => {
+            try {
+              store.pcList.splice(index, 1);
+              logMan.deleteByCharItem(i);
+            } finally {
+              m.destroy()
             }
-          },
-          () => '确定'
+          }
+        },
+        () => '确定'
       ),
     ]
   })
@@ -589,30 +758,30 @@ const nameChanged = (i: CharItem) => {
       },
       content: () => [
         h(
-            NText,
-            { innerHTML: `即将进行名字变更 <b>${name1} -> ${name2}</b><br />将修改信息行，并在文本中进行批量替换（${name1w} 替换为 ${name2w}），确定吗？` },
+          NText,
+          { innerHTML: `即将进行名字变更 <b>${name1} -> ${name2}</b><br />将修改信息行，并在文本中进行批量替换（${name1w} 替换为 ${name2w}），确定吗？` },
         ),
       ],
       footer: () => [
         h(
-            NButton,
-            { type: 'default', onClick: () => m.destroy(), style: { marginRight: '1rem' } },
-            () => '取消',
+          NButton,
+          { type: 'default', onClick: () => m.destroy(), style: { marginRight: '1rem' } },
+          () => '取消',
         ),
         h(
-            NButton,
-            {
-              type: 'primary', onClick: () => {
-                try {
-                  logMan.rename(i, oldName, newName)
-                } catch (_e) {
-                  i.name = oldName;
-                } finally {
-                  m.destroy()
-                }
+          NButton,
+          {
+            type: 'primary', onClick: () => {
+              try {
+                logMan.rename(i, oldName, newName)
+              } catch (_e) {
+                i.name = oldName;
+              } finally {
+                m.destroy()
               }
-            },
-            () => '确定'
+            }
+          },
+          () => '确定'
         ),
       ]
     })
@@ -694,38 +863,38 @@ const doEditorHighlightClick = (e: any) => {
         content: '部分移动设备上的特定浏览器可能会因为兼容性问题而卡死，继续吗？',
         footer: () => [
           h(
-              NButton,
-              {
-                type: 'default',
-                onClick: () => {
-                  store.doEditorHighlight = false
-                  m.destroy()
-                  setTimeout(() => {
-                    doFlush()
-                  }, 3000)
-                },
-                style: { marginRight: '1rem' }
+            NButton,
+            {
+              type: 'default',
+              onClick: () => {
+                store.doEditorHighlight = false
+                m.destroy()
+                setTimeout(() => {
+                  doFlush()
+                }, 3000)
               },
-              () => '取消',
+              style: { marginRight: '1rem' }
+            },
+            () => '取消',
           ),
           h(
-              NButton,
-              {
-                type: 'primary', onClick: () => {
-                  try {
-                    doHl()
-                  } catch (_e) {
-                    // 重新关闭
-                    setTimeout(() => {
-                      store.doEditorHighlight = false
-                      store.reloadEditor()
-                    }, 500)
-                  } finally {
-                    m.destroy()
-                  }
+            NButton,
+            {
+              type: 'primary', onClick: () => {
+                try {
+                  doHl()
+                } catch (_e) {
+                  // 重新关闭
+                  setTimeout(() => {
+                    store.doEditorHighlight = false
+                    store.reloadEditor()
+                  }, 500)
+                } finally {
+                  m.destroy()
                 }
-              },
-              () => '确定'
+              }
+            },
+            () => '确定'
           ),
         ]
       })
@@ -755,18 +924,18 @@ const code = ref("")
   width: 50%;
 }
 
-.options > div {
+.options>div {
   width: 30rem;
   max-width: 30rem;
   margin-bottom: 2rem;
 }
 
-.options > div > .switch {
+.options>div>.switch {
   display: flex;
   align-items: center;
   justify-content: center;
 
-  & > h4 {
+  &>h4 {
     margin-top: 0rem;
     margin-bottom: 0rem;
     margin-left: 1rem;
