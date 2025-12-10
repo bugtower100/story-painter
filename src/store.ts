@@ -49,9 +49,26 @@ export const useStore = defineStore('main', {
         m.set(packNameId(i), i);
       }
       return m;
-    }
+    },
+    hiddenIdSet(state): Set<string> {
+      const set = new Set<string>();
+      for (const pc of state.pcList) {
+        if (pc.role === '隐藏' && pc.IMUserId && pc.name) {
+          set.add(`${pc.IMUserId}-${pc.name}`);
+        }
+      }
+      return set;
+    },
   },
   actions: {
+    isHiddenLogItem(item: LogItem): boolean {
+      if (item.role === '隐藏') return true;
+      const id = packNameId(item);
+      const pc = this.pcMap.get(id);
+      if (pc?.role === '隐藏') return true;
+      if (item.IMUserId && this.hiddenIdSet.has(`${item.IMUserId}-${item.nickname}`)) return true;
+      return false;
+    },
     colorHexToName(color: string) {
       // nga全部可用颜色
       // "skyblue", "royalblue", "blue", "darkblue", "orange", "orangered", "crimson", "red", "firebrick", "darkred", "green", "limegreen", "seagreen", "teal", "deeppink", "tomato", "coral", "purple", "indigo", "burlywood", "sandybrown", "sienna", "chocolate", "silver"
