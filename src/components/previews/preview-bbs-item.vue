@@ -79,7 +79,8 @@ const nameReplace = (msg: string) => {
 const bbsMessageSolve = (i: LogItem) => {
   const options = Object.assign({}, store.exportOptions)
   options.imageHide = true;
-  if (store.isHiddenLogItem(i)) return '';
+  const id = packNameId(i);
+  if (store.pcMap.get(id)?.role === '隐藏') return '';
 
   let msg = msgImageFormat(escapeHTML(i.message), options);
   msg = msgAtFormat(msg, store.pcList);

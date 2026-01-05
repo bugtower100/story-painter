@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跑团记录</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;700&family=M+PLUS+Rounded+1c:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class=" font-noto-sans export-body">
+    <style>:root{--bubble-max-width:80%;--bubble-bg-color:#ffffff;--bubble-arrow-color:#ffffff;--bubble-right-bg-color:#dcf8c6;--bubble-right-arrow-color:#dcf8c6;--icon-size:64px;--base-text-color:#333333;--text-edge-color:#ffffff}#export-log-display img{display: block;}body.export-body{margin:0;padding:0;background-color:#f3f4f6;font-size:16px;line-height:1.7;color:var(--base-text-color);position:relative;transition:margin-left 0.3s ease-in-out}body.export-body.has-background-image::before{content:"";position:fixed;left:0;right:0;top:0;bottom:0;z-index:-1;background-image:url('');background-size:cover;background-position:center center;background-repeat:no-repeat;filter:blur(8px) brightness(1.1)}.log-export-container{max-width:900px;margin:20px auto;padding:20px 25px;background-color:rgb(243,244,246);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);position:relative;z-index:1}h1{font-size:1.7em;border-bottom:2px solid #eee;padding-bottom:10px;margin:0 0 25px 0;text-align:center;color:var(--base-text-color)}.filter-controls.export{background-color:#f8f9fa;padding:10px 15px;border-radius:6px;margin-bottom:20px;border:1px solid #dee2e6;display:flex;flex-wrap:wrap;gap:15px;align-items:flex-start}.filter-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.filter-group label{font-weight:bold;font-size:0.9em;color:#495057;white-space:nowrap}.tab-nav.export{display:flex;flex-wrap:wrap;gap:5px}.tab-button.export{background-color:#e9ecef;border:1px solid #ced4da;color:#495057;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.85em;transition:background-color 0.2s,color 0.2s;white-space:nowrap}.tab-button.export:hover{background-color:#dee2e6}.tab-button.export.active{background-color:#0d6efd;border-color:#0d6efd;color:white;font-weight:bold}.all-mode-filter.export{width:100%;padding-top:10px;border-top:1px solid #e0e0e0;margin-top:10px}.all-mode-filter.export.hidden{display:none}.all-mode-checkbox-container{display:flex;flex-wrap:wrap;align-items:center;gap:15px}.all-mode-filter.export .checkbox-wrapper{display:flex;align-items:center}.all-mode-filter.export input[type="checkbox"]{margin-right:5px;cursor:pointer}.all-mode-filter.export label{font-size:0.85em;cursor:pointer}.all-mode-buttons{margin-left:auto;display:flex;gap:8px}.all-mode-buttons button{font-size:0.75em;padding:2px 6px;background:#ddd;border:1px solid #ccc;border-radius:3px;cursor:pointer}.speaker-filter.export{padding:5px 8px;border:1px solid #ced4da;border-radius:4px;font-size:0.9em;background-color:white;min-width:150px}.tab-nav.export .placeholder{font-size:0.85em;color:#6c757d}.log-display.export{margin-top:10px}.hidden-log-item{display:none!important}.log-item{margin-bottom:16px}.message-item.export{position:relative}.message-container.export{display:flex;align-items:flex-start}.narration-container.export{padding:2px 4px;line-height:inherit}.message-item.export[data-display-mode="narration"] .message-container.export{display:none}.message-item.export[data-display-mode="bubble"] .narration-container.export{display:none}.message-container.export.align-right{flex-direction:row-reverse}.message-container.export.align-right .icon-container.export{margin-left:12px;margin-right:0}.message-container.export.align-right .content-container.export{text-align:right}.message-container.export.align-right .speaker-name-default.export{text-align:right}.message-container.export.align-right .bubble.export.bubble-left{margin-left:auto;margin-right:0;background-color:var(--bubble-right-bg-color)}.message-container.export.align-right .bubble.export.bubble-left::before{left:auto;right:-8px;border-width:8px 0 8px 10px;border-color:transparent transparent transparent var(--bubble-right-arrow-color)}.icon-container.export{flex-shrink:0;margin-right:12px;width:var(--icon-size);height:var(--icon-size);position:relative;border-radius:50%}.icon.export{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 0%;border:3px solid;box-sizing:border-box;background-color:#f0f0f0;box-shadow:0 1px 3px rgba(0,0,0,0.2)}.icon-placeholder.export{display:none;width:100%;height:100%;border-radius:50%;border:3px solid;box-sizing:border-box;background-color:#e0e0e0;color:#757575;font-weight:bold;text-align:center;overflow:hidden;text-transform:uppercase;line-height:58px;font-size:32px}.content-container.export{flex-grow:1;min-width:0}.speaker-name-default.export,.narration-speaker,.speaker-name-below-icon.export{text-shadow:-1px -1px 0 var(--text-edge-color),1px -1px 0 var(--text-edge-color),-1px 1px 0 var(--text-edge-color),1px 1px 0 var(--text-edge-color)}.speaker-name-default.export{display:block;font-weight:bold;margin-bottom:4px;font-size:0.9em}.original-tab.export{font-weight:normal;font-size:0.88em;color:#555;margin-left:6px;text-shadow:-1px -1px 0 var(--text-edge-color),1px -1px 0 var(--text-edge-color),-1px 1px 0 var(--text-edge-color),1px 1px 0 var(--text-edge-color)}.tab-name-below-icon.export{display:none;font-size:0.8em;color:#666;margin-bottom:2px;text-shadow:-1px -1px 0 var(--text-edge-color),1px -1px 0 var(--text-edge-color),-1px 1px 0 var(--text-edge-color),1px 1px 0 var(--text-edge-color)}.speaker-name-below-icon.export{display:none;font-size:0.85em;font-weight:bold;text-shadow:-1px -1px 0 var(--text-edge-color),1px -1px 0 var(--text-edge-color),-1px 1px 0 var(--text-edge-color),1px 1px 0 var(--text-edge-color),-1.5px -1.5px 0 var(--text-edge-color),1.5px -1.5px 0 var(--text-edge-color),-1.5px 1.5px 0 var(--text-edge-color),1.5px 1.5px 0 var(--text-edge-color);position:absolute;bottom:-1.5em;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(var(--icon-size) + 20px);line-height:1.1;text-align:center;pointer-events:none}.bubble.export{position:relative;padding:10px 15px;border-radius:16px;word-wrap:break-word;word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.12);background-color:var(--bubble-bg-color);max-width:var(--bubble-max-width);text-align:left}.bubble.export.bubble-left::before{content:"";position:absolute;top:10px;left:-8px;width:0;height:0;border-style:solid;border-width:8px 10px 8px 0;border-color:transparent var(--bubble-arrow-color) transparent transparent}.bubble.export a{color:#0066cc;text-decoration:underline}.bubble.export a:hover{color:#004c99;text-decoration:none}.narration-tab{font-size:0.8em;color:#666;margin-right:0.5em;text-shadow:-1px -1px 0 var(--text-edge-color),1px -1px 0 var(--text-edge-color),-1px 1px 0 var(--text-edge-color),1px 1px 0 var(--text-edge-color)}.narration-speaker{font-weight:bold;margin-right:0.25em}.narration-message{display:inline}body.name-below-icon-active .icon-container.export{margin-bottom:1.8em;overflow:visible}body.name-below-icon-active .speaker-name-default.export{display:none}body.name-below-icon-active .tab-name-below-icon.export{display:block}body.name-below-icon-active .speaker-name-below-icon.export{display:block}body.name-below-icon-active .bubble.export.bubble-left{margin-left:0}body.name-below-icon-active .bubble.export.bubble-left::before{left:-8px}body.name-below-icon-active .message-container.export.align-right .bubble.export.bubble-left{margin-right:0}.inserted-image-container.export{text-align:center}.inserted-image.export{max-width:85%;max-height:550px;border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,0.15);display:block;margin:0 auto}.image-caption.export{font-size:0.9em;color:#444;margin-top:6px;padding:0 5%;line-height:1.4;text-shadow:-1px -1px 0 var(--text-edge-color),1px -1px 0 var(--text-edge-color),-1px 1px 0 var(--text-edge-color),1px 1px 0 var(--text-edge-color)}.image-error-placeholder.export{color:#d9534f;font-size:0.9em;font-weight:bold;margin-top:8px;padding:5px;background-color:#f2dede;border:1px solid #ebccd1;border-radius:4px;display:inline-block}.tab-separator.export{border:0;border-top:2px dashed #cccccc;margin:25px 5%;display:block}.error-message.export{background-color:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:10px 15px;border-radius:4px;margin:15px 0;font-size:0.9em}.empty-log-message.export{text-align:center;color:#666;font-style:italic;padding:30px}.export-error{color:red;font-weight:bold;text-align:center;margin:10px;padding:5px;border:1px solid red;background-color:#ffeeee}.heading-item.export{margin:12px 0 8px 0;padding:5px 0;font-weight:bold}.heading-item.export.level-1{font-size:1.4em;border-bottom:2px solid #3498db;margin-top:20px;padding-bottom:8px}.heading-item.export.level-2{font-size:1.2em;border-bottom:1px solid #95a5a6;margin-top:15px;padding-bottom:6px}.heading-item.export.level-3{font-size:1.05em;margin-top:10px;padding-bottom:4px}.heading-item.export.level-4{font-size:1.0em;margin-top:8px;padding-bottom:3px;color:#555}.heading-item.export.level-5{font-size:0.95em;margin-top:6px;padding-bottom:2px;font-weight:normal;color:#666}.heading-item.export.level-6{font-size:0.9em;margin-top:5px;padding-bottom:1px;font-weight:normal;color:#777}.export-headings-nav{position:fixed;left:-210px;top:10px;width:200px;max-height:calc(100vh - 20px);overflow-y:auto;background:#f9f9f9;border:1px solid #ddd;border-left:none;border-radius:0 5px 5px 0;padding:10px;z-index:1000;font-size:0.9em;transition:left 0.3s ease,box-shadow 0.3s ease;box-shadow:2px 0 10px rgba(0,0,0,0.2)}.export-headings-nav.open{left:0px!important;box-shadow:2px 0 10px rgba(0,0,0,0.2)}.export-headings-nav button#export-toggle-headings-nav{position:absolute;left:100%;top:0;background:#3498db;color:white;border:none;padding:10px 5px;border-radius:0 4px 4px 0;cursor:pointer;font-size:0.8em;writing-mode:vertical-rl;text-orientation:mixed;z-index:1;transition:background-color 0.2s}.export-headings-nav button#export-toggle-headings-nav:hover{background:#2980b9}.export-headings-nav .nav-content{padding:5px}.export-headings-nav h5{margin-top:0;margin-bottom:8px;font-size:1.1em;border-bottom:1px solid #eee;padding-bottom:5px}.export-headings-nav ul{list-style:none;padding:0;margin:0}.export-headings-nav li a{text-decoration:none;color:#337ab7;display:block;padding:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:2px}.export-headings-nav li a:hover{color:#23527c;background:#eee}.export-headings-nav li.level-1 a{padding-left:0px;font-weight:bold}.export-headings-nav li.level-2 a{padding-left:10px}.export-headings-nav li.level-3 a{padding-left:20px;font-size:0.95em}.export-headings-nav li.level-4 a{padding-left:30px;font-size:0.9em}.export-headings-nav li.level-5 a{padding-left:40px;font-size:0.85em}.export-headings-nav li.level-6 a{padding-left:50px;font-size:0.85em}@media (max-width:768px){body.export-body{padding:0;font-size:15px;margin-left:0!important}.log-export-container{padding:15px;margin:10px}h1{font-size:1.5em;margin-bottom:20px}.filter-controls.export{flex-direction:column;align-items:stretch}.filter-group{flex-direction:column;align-items:flex-start;width:100%}.tab-nav.export{justify-content:center}.speaker-filter.export{width:100%}.icon-container.export{width:48px;height:48px;margin-right:10px}.icon-placeholder.export{line-height:43px;font-size:24px}.bubble.export{padding:8px 12px}.bubble.export.bubble-left::before{top:8px;left:-7px;border-width:7px 9px 7px 0}.message-container.export.align-right .bubble.export.bubble-left::before{top:8px;right:-7px;left:auto;border-width:7px 0 7px 9px}.speaker-name-default.export{font-size:0.92em}.original-tab.export{font-size:0.82em}.tab-name-below-icon.export{font-size:0.75em}.speaker-name-below-icon.export{font-size:0.8em;max-width:calc(48px + 15px);bottom:-1.3em}body.name-below-icon-active .icon-container.export{margin-bottom:1.5em}.inserted-image.export{max-width:95%;max-height:400px}.image-caption.export{font-size:0.85em;padding:0 2%}.tab-separator.export{margin:20px 3%}.export-headings-nav{width:180px;left:-190px}.export-headings-nav.open{left:0px!important}.export-headings-nav button#export-toggle-headings-nav{padding:8px 4px}}
+
+/* 虚拟列表所需新增或修改的CSS */
+.log-display.export {
+    margin-top: 10px;
+    height: 700px; 
+    overflow-y: auto;
+    position: relative; 
+}
+
+/* 虚拟列表内容区域的样式 */
+#virtual-list-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* 关键：防止内容区域影响父容器的宽度，确保滚动准确 */
+    will-change: transform; 
+}
+.log-item {
+    box-sizing: border-box;
+    margin-bottom: 16px; 
+}
+.log-item.highlight {
+    outline: 2px solid #888; 
+    background: #888;
+}
+
+
+/* 搜索框样式 */
+#export-search-input {
+    padding: 5px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+    min-width: 150px;
+}
+#export-search-group button {
+    padding: 5px 8px;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s;
+    margin-left: 5px;
+}
+#export-search-group button:hover {
+    background-color: #0b5ed7;
+}
+#search-count-display {
+    font-size: 0.9em;
+    color: #495057;
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+</style>
+
+    <div class="log-export-container">
+        <h1>跑团记录</h1>
+        <div class="filter-controls export">
+            <div class="filter-group"> <label for="export-tab-filter">标签:</label>
+                <nav id="export-log-tabs" class="tab-nav export" aria-label="Log Tabs"><span
+                        class="placeholder">统计中...</span></nav>
+            </div>
+            <div id="export-all-mode-filter" class="all-mode-filter export hidden"></div>
+            <div class="filter-group"> <label for="export-speaker-filter">发言人:</label> <select
+                    id="export-speaker-filter" class="speaker-filter export">
+                    <option value="all">所有发言人</option>
+                </select> </div>
+            <div class="filter-group" id="export-search-group">
+                <label for="export-search-input">内容搜索:</label>
+                <input type="text" id="export-search-input" placeholder="仅正文内容">
+                <button id="export-search-button">搜索</button>
+                <button id="export-next-button" disabled>下一个</button>
+                <span id="search-count-display"></span>
+            </div>
+        </div>
+        <div id="export-log-display" class="log-display export">
+            <div id="virtual-list-phantom"></div>
+            <div id="virtual-list-content"></div>
+        </div>
+    </div>
+</body>
+<script>var data = $$replace
+
+    const template =({tab,speaker,displayMode,iconUrl,borderColor,textColor,placeholderChar,iconDisplayStyle,message,bubbleBgColor,bubbleArrowColor,showSeparator}) => 
+    `<div class="message-item export log-item" data-tab="${tab}" data-speaker="${speaker}" data-display-mode="${displayMode}">
+        <div class="message-container export">
+            <div class="icon-container export" style="width:64px; height:64px;">
+                <img src="${iconUrl}" alt="${speaker} (default)" class="icon export"
+                    style="border-color: ${borderColor}; display: block;"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                <span class="icon-placeholder export"
+                    style="display: ${iconDisplayStyle}; border-color: ${borderColor}; line-height: 58px; font-size: 32px;">
+                    ${placeholderChar}
+                </span>
+                <span class="speaker-name-below-icon export" style="color: {{textColor}};">${speaker}</span>
+            </div>
+            <div class="content-container export">
+                <span class="speaker-name-default export" style="color: {{textColor}};">
+                    ${speaker} <span class="original-tab export">[${tab}]</span>
+                </span>
+                <span class="tab-name-below-icon export">[${tab}]</span>
+                <div class="bubble export bubble-left"
+                    style="--bubble-bg-color: ${bubbleBgColor}; --bubble-arrow-color: ${bubbleArrowColor}; color: ${textColor};">
+                    ${message}
+                </div>
+            </div>
+        </div>
+        <div class="narration-container export" style="color: {{textColor}};">
+            <span class="narration-tab">[${tab}]</span>
+            <span class="narration-speaker">${speaker}:</span>
+            <span class="narration-message">${message}</span>
+        </div>
+    </div>`
+
+    const container = document.getElementById('export-log-display')
+    const content = document.getElementById('virtual-list-content')
+    const phantom = document.getElementById('virtual-list-phantom')
+    const searchInput = document.getElementById('export-search-input');
+    const searchButton = document.getElementById('export-search-button');
+    const nextButton = document.getElementById('export-next-button');
+    const searchCountDisplay = document.getElementById('search-count-display');
+
+    // 虚拟列表配置（使用默认预估高度，仅用于初始化缓存）
+    const DEFAULT_ITEM_HEIGHT = 100; 
+    
+    // 全局数据状态
+    let filteredData = data.sort((a, b) => a.time - b.time); 
+    let activeTab='all',activePlayer='all';
+
+    // 搜索状态
+    let searchResults = []; 
+    let currentMatchIndex = -1; 
+    let currentSearchTerm = ''; 
+    
+    // 关键缓存：存储每项的实际高度和累计偏移量
+    // 长度与 filteredData 相同，初始化为预估高度
+    let itemHeights = new Array(filteredData.length).fill(DEFAULT_ITEM_HEIGHT); 
+    let offsetCache = []; 
+    
+    // 用于标记是否正在执行搜索跳转，防止滚动事件干扰
+    let isJumping = false;
+
+
+    // --- 辅助函数 ---
+
+    /**
+     * 更新搜索计数显示
+     */
+    function updateSearchCountDisplay() {
+        if (searchResults.length > 0) {
+            searchCountDisplay.textContent = `${currentMatchIndex + 1} / ${searchResults.length}`;
+            nextButton.disabled = false;
+        } else if (currentSearchTerm) {
+            searchCountDisplay.textContent = '未找到';
+            nextButton.disabled = true;
+        } else {
+            searchCountDisplay.textContent = '';
+            nextButton.disabled = true;
+        }
+    }
+
+    /**
+     * 更新高度缓存和偏移缓存
+     */
+    function updateCaches() {
+        offsetCache = [];
+        let totalHeight = 0;
+        
+        // 1. 遍历并计算所有项的累计偏移量
+        for (let i = 0; i < filteredData.length; i++) {
+            offsetCache[i] = totalHeight;
+            totalHeight += itemHeights[i];
+        }
+
+        // 2. 遍历当前渲染的 DOM 元素，获取实际高度并校正缓存
+        const items = content.children;
+        for (let i = 0; i < items.length; i++) {
+            const globalIndex = startIndex + i;
+            if (globalIndex < filteredData.length) {
+                // offsetHeight 包含 padding 和 border，我们需要加上 margin-bottom
+                const actualHeight = items[i].offsetHeight + 16; 
+                if (actualHeight > 0) {
+                   itemHeights[globalIndex] = actualHeight;
+                }
+            }
+        }
+        
+        // 3. 重新计算总高度并更新 phantom 高度
+        totalHeight = itemHeights.reduce((sum, height) => sum + height, 0);
+        phantom.style.height = `${totalHeight}px`;
+
+        // 4. 重新计算偏移缓存 (因为 itemHeights 可能更新了)
+        let currentOffset = 0;
+        for (let i = 0; i < filteredData.length; i++) {
+            offsetCache[i] = currentOffset;
+            currentOffset += itemHeights[i];
+        }
+    }
+    
+    /**
+     * 根据偏移量（滚动位置）使用二分查找法查找起始索引
+     * @param {number} offset - 滚动位置
+     */
+    function findStartIndexByOffset(offset) {
+        let low = 0;
+        let high = offsetCache.length - 1;
+        let index = 0;
+
+        while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            if (offsetCache[mid] <= offset) {
+                index = mid;
+                low = mid + 1;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return index;
+    }
+
+
+    // --- 核心逻辑函数 ---
+
+    /**
+     * 虚拟列表渲染函数 (动态高度)
+     */
+    function virtualRender() {
+        // 在跳转过程中忽略滚动事件，避免多次触发导致的性能问题
+        if (isJumping) return;
+        
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.clientHeight;
+
+        // 1. 更新缓存 (这会精确校准滚动条总高度)
+        updateCaches(); 
+
+        // 2. 计算起始索引 (使用精确偏移缓存查找)
+        // 向上查找，确保有缓冲
+        const BUFFER_PX = containerHeight / 2;
+        startIndex = findStartIndexByOffset(Math.max(0, scrollTop - BUFFER_PX)); 
+
+        // 3. 计算结束索引 (找到最后一个可见项+缓冲)
+        let visibleEndOffset = scrollTop + containerHeight + BUFFER_PX;
+        
+        // 找到第一个偏移量大于可见区域末尾的索引
+        endIndex = findStartIndexByOffset(visibleEndOffset) + 1;
+        endIndex = Math.min(filteredData.length, endIndex);
+        
+        // 4. 计算内容区域偏移量
+        const offset = offsetCache[startIndex] || 0;
+
+        // 5. 更新内容区域定位和渲染内容
+        content.style.transform = `translateY(${offset}px)`;
+        
+        let html = '';
+        const currentBatch = filteredData.slice(startIndex, endIndex);
+
+        currentBatch.forEach((v, localIndex) => {
+            const globalIndex = startIndex + localIndex;
+            
+            const isHighlighted = searchResults[currentMatchIndex] === globalIndex;
+            const highlightClass = isHighlighted ? ' highlight' : '';
+            
+            let itemHTML = template(v);
+            itemHTML = itemHTML.replace('<div class="message-item export log-item', `<div class="message-item export log-item${highlightClass}"`);
+            html += itemHTML;
+        });
+
+        content.innerHTML = html;
+    }
+
+    /**
+     * 主渲染函数：用于筛选/切换条件时调用
+     */
+    function render() {
+        // 0. 筛选数据
+        filteredData = data.filter(v => {
+            const tabMatch = activeTab === 'all' || v.tab === activeTab
+            const playerMatch = activePlayer === 'all' || v.speaker === activePlayer
+            return tabMatch && playerMatch
+        }).sort((a, b) => a.time - b.time)
+
+        // 重置高度缓存，对应新的数据长度
+        itemHeights = new Array(filteredData.length).fill(DEFAULT_ITEM_HEIGHT);
+
+        // 1. 滚动条归零
+        container.scrollTop = 0;
+        isJumping = false;
+
+        // 重置搜索状态（因为数据变了，之前的搜索结果索引失效）
+        searchResults = [];
+        currentMatchIndex = -1;
+        updateSearchCountDisplay();
+
+        // 2. 重新执行虚拟渲染以显示初始视图
+        virtualRender();
+    }
+    
+    /**
+     * 初始化搜索，找到所有匹配项并跳转到第一个
+     */
+    function searchAndJump() {
+        const searchTerm = searchInput.value.trim();
+        
+        if (searchTerm === currentSearchTerm && searchTerm) {
+            jumpToNextMatch();
+            return;
+        }
+
+        currentSearchTerm = searchTerm;
+        searchResults = [];
+        currentMatchIndex = -1;
+        
+        if (!searchTerm) {
+            updateSearchCountDisplay();
+            virtualRender(); // 清除高亮
+            return;
+        }
+
+        const keyword = searchTerm.toLowerCase();
+
+        // 1. 遍历完整数据，找到所有匹配项的全局索引
+        filteredData.forEach((item, index) => {
+            if (item.message && item.message.toLowerCase().includes(keyword)) {
+                searchResults.push(index);
+            }
+        });
+        
+        // 2. 处理结果
+        if (searchResults.length > 0) {
+            currentMatchIndex = 0; // 从第一个结果开始
+            jumpToMatch(searchResults[currentMatchIndex]);
+        } else {
+            updateSearchCountDisplay();
+            virtualRender(); 
+        }
+    }
+    
+    /**
+     * 跳转到指定的全局索引，使用平滑滚动
+     * @param {number} globalIndex 
+     */
+    function jumpToMatch(globalIndex) {
+        if (globalIndex < 0 || globalIndex >= filteredData.length) return;
+        
+        // 1. 计算目标滚动位置 (使用精确偏移缓存)
+        // 注意：这里我们使用缓存，所以必须确保缓存是最新的。
+        updateCaches(); 
+        const scrollTopPosition = offsetCache[globalIndex];
+
+        // 2. 标记正在跳转
+        isJumping = true;
+        
+        // 3. 滚动容器 (自动滑动)
+        container.scrollTo({
+            top: scrollTopPosition,
+            behavior: 'smooth'
+        });
+
+        // 4. 清除跳转标记，并强制更新渲染，确保目标元素高亮
+        setTimeout(() => {
+            isJumping = false;
+            // 滚动停止后，virtualRender 会确保目标元素在 DOM 中
+            virtualRender();
+        }, 300); // 假设 300ms 足够完成平滑滚动，或者在更复杂的场景中，应该监听 'scrollend' 事件。
+
+        // 5. 更新显示
+        updateSearchCountDisplay();
+    }
+
+
+    /**
+     * 跳转到下一个匹配项
+     */
+    function jumpToNextMatch() {
+        if (searchResults.length === 0) return;
+
+        // 循环到第一个
+        currentMatchIndex = (currentMatchIndex + 1) % searchResults.length;
+        
+        jumpToMatch(searchResults[currentMatchIndex]);
+    }
+    
+    // --- 事件绑定 ---
+
+    const tabs = document.querySelector('#export-log-tabs')
+    const selector = document.querySelector('#export-speaker-filter')
+    
+    // 初始化选项卡和发言人
+    const tabSet = new Set();
+    const selectPlayers = new Set();
+    data.forEach(v => {
+        tabSet.add(v.tab)
+        selectPlayers.add(v.speaker)
+    })
+    
+    tabs.innerHTML = `<button data-tab="all" class="tab-button export active">[all]</button>`+Array.from(tabSet).map(v => `<button data-tab="${v}" class="tab-button export">[${v}]</button>`).join("")
+    selector.innerHTML = `<option value="all">全部发言人</option>`+Array.from(selectPlayers)
+    .map(v => `<option value="${v}">${v}</option>`).join('')
+
+    tabs.onclick = (e) => {
+        if (!e.target.dataset.tab) return;
+        [...tabs.children].forEach(v => v.classList.remove('active'))
+        e.target.classList.add('active')
+        activeTab = e.target.dataset.tab
+        render() 
+    } 
+    
+    selector.onchange = (e) => {
+        activePlayer = e.target.value
+        render() 
+    }
+
+    searchButton.onclick = searchAndJump;
+    nextButton.onclick = jumpToNextMatch;
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchAndJump();
+        }
+    });
+
+    // 关键：滚动事件触发虚拟渲染和高度更新
+    container.addEventListener('scroll', virtualRender);
+
+    // 页面加载完成后执行首次渲染
+    updateCaches(); // 确保初始缓存和 phantom 高度设置正确
+    virtualRender(); 
+</script>
+
+</html>

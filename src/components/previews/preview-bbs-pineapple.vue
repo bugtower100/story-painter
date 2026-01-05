@@ -108,7 +108,7 @@ const formattedItems = computed(() => {
 
   for (const entry of props.previewItems) {
     if (entry.isRaw) continue;
-    if (store.isHiddenLogItem(entry)) continue;
+    if (store.pcMap.get(packNameId(entry))?.role === '隐藏') continue;
 
     const text = normalizeMessage(entry);
     if (!text) continue;

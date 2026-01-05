@@ -56,7 +56,8 @@ const nameReplace = (msg: string) => {
 }
 
 const trgMessageSolve = (i: LogItem) => {
-  if (store.isHiddenLogItem(i)) return '';
+  const id = packNameId(i);
+  if (store.pcMap.get(id)?.role === '隐藏') return '';
 
   let msg = msgImageFormat(escapeHTML(i.message), store.exportOptions, true);
   msg = msgAtFormat(msg, store.pcList);

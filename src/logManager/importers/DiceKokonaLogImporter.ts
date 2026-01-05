@@ -3,7 +3,7 @@ import { CharItem, LogItem, packNameId } from "../types";
 import { LogImporter, TextInfo } from "./_logImpoter";
 
 // 注: 某种情况下，发言条的句末会带一个空格，已调整（某版本赵骰，原始文件及从上方文本框复制时）
-export const reEditLogTest = /^([^(<\n]+)(\(([^(\n]+)\)|\<[^(\n]+\>)?(\s+)(\d{4}-\d{1,2}-\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)? ?$/m
+export const reEditLogTest = /^([^(<\n]+)(\(([^(\n]+)\)|\<[^(\n]+\>)?(\s*)(?:#([^\s]+))?(\s+)(\d{4}-\d{1,2}-\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)? ?$/m
 export const reEditLog = new RegExp(reEditLogTest, 'gm')
 
 
@@ -45,7 +45,9 @@ export class DiceKokonaLogImporter extends LogImporter {
 
         const item = {} as LogItem;
         item.nickname = m[1];
-        [item.time, item.timeText] = this.parseTime((m[5] || '') + m[6]);
+        const expressionTagRaw = (m[5] || '').trim()
+        if (expressionTagRaw) item.expressionTag = expressionTagRaw
+        ;[item.time, item.timeText] = this.parseTime((m[7] || '') + m[8]);
         item.message = '';
         if (m[2]) {
           item.IMUserId = m[2].slice(1, -1);

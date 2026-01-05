@@ -71,11 +71,28 @@ export function setCharInfo(charInfo: Map<string, CharItem>, item: LogItem) {
       }
     }
 
+    let avatar = undefined;
+    const defaultAvatars = [
+      {
+        ids: ['2175435073', '588195503', '258286641'],
+        names: ['小小普', '普瑞', '普瑞·帕特尔'],
+        path: '/images/普瑞头像.png'
+      }
+    ]
+
+    for (const def of defaultAvatars) {
+      if (def.ids.includes(item.IMUserId) || def.names.includes(item.nickname)) {
+        avatar = def.path;
+        break;
+      }
+    }
+
     charInfo.set(id, {
       name: item.nickname,
       IMUserId: item.IMUserId,
       role: role as any,
       color: '',
+      avatar
     })
   }
 }

@@ -2,6 +2,9 @@
     <!-- 这句是为了防止空元素占行 -->
     <tr>
       <td :style="{ 'color': colorByName(source) }" style="border: none;width: 120px;" class="_nickname">
+        <span v-if="avatarOf(source)" style="display:inline-block;vertical-align:middle;margin-right:6px">
+          <img :src="avatarOf(source)" alt="avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover" />
+        </span>
         {{ nicknameSolve(source) }}
       </td>
       <td :style="{ 'color': colorByName(source) }" style="border: none;border-left: 1px solid black;padding-left: 20px;" v-html="previewMessageSolve(source)"></td>
@@ -27,6 +30,17 @@
     // const info = store.pcMap.get(`${i.nickname}-`);
     const info = store.pcMap.get(packNameId(i));
     return info?.color;
+  }
+
+  const avatarOf = (i: LogItem) => {
+    if (i.overrideAvatar) return i.overrideAvatar
+    const info = store.pcMap.get(packNameId(i))
+    if (!info) return undefined
+    if (i.expressionTag) {
+      const m = store.workbench.pcNameExpressionsMap.get(info.name) || {}
+      if (m[i.expressionTag]) return m[i.expressionTag]
+    }
+    return info.avatar
   }
   
   
@@ -69,7 +83,8 @@
   let canvasFontSize = '';
   
   const previewMessageSolve = (i: LogItem) => {
-    if (store.isHiddenLogItem(i)) return '';
+    const id = packNameId(i);
+    if (store.pcMap.get(id)?.role === '隐藏') return '';
   
     let msg = msgImageFormat(escapeHTML(i.message), store.exportOptions, true);
     msg = msgAtFormat(msg, store.pcList);

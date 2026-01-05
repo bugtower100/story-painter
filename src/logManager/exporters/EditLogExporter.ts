@@ -35,11 +35,14 @@ export class EditLogExporter extends LogExporter {
       if (i.IMUserId) {
         imuid = `(${i.IMUserId})`;
       }
+      const expTag = i.expressionTag ? `#${i.expressionTag}` : ''
 
-      text += `${i.nickname}${imuid} ${timeText}${idSuffix}\n`
+      const channel = (i as any).commandInfo?.channel ? ` [${(i as any).commandInfo.channel}]` : ''
+      text += `${i.nickname}${imuid}${expTag} ${timeText}${channel}${idSuffix}\n`
       index = indexOffset + textAll.length + text.length
       let indexContent = index
-      text += `${i.message}`
+      const body = (i.message || '').replaceAll('<br />', '\n')
+      text += `${body}\n\n`
       index = indexOffset + textAll.length + text.length
       let indexEnd = index
 

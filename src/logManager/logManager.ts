@@ -10,7 +10,10 @@ import { CharItem, LogItem } from "./types";
 import { DiceKokonaLogImporter } from "./importers/DiceKokonaLogImporter";
 import { RenderedLogImporter } from "./importers/RenderedLogImporter";
 import { FvttLogImporter } from "./importers/FvttLogImporter";
-import { PaintedLogImporter } from "./importers/PaintedLogImporter";
+import { CcfoliaProjectImporter } from "./importers/CcfoliaProjectImporter";
+import { CcfoliaTextImporter } from "./importers/CcfoliaTextImporter";
+import { CcfoliaHtmlImporter } from "./importers/CcfoliaHtmlImporter";
+import { TwoLineChannelTextImporter } from "./importers/TwoLineChannelTextImporter";
 
 
 export class LogManager {
@@ -20,6 +23,7 @@ export class LogManager {
   }>(this);
 
   importers = [
+    ['twoLineChannel', new TwoLineChannelTextImporter(this)],
     ['sealDice', new SealDiceLogImporter(this)],
     ['editLog', new EditLogImporter(this)],
     ['qqExport', new QQExportLogImporter(this)],
@@ -27,7 +31,9 @@ export class LogManager {
     ['dice!', new DiceKokonaLogImporter(this)],
     ['rendered', new RenderedLogImporter(this)],
     ['fvtt', new FvttLogImporter(this)],
-	["painted", new PaintedLogImporter(this)],
+    ['ccfoliaProject', new CcfoliaProjectImporter(this)],
+    ['ccfoliaText', new CcfoliaTextImporter(this)],
+    ['ccfoliaHtml', new CcfoliaHtmlImporter(this)],
   ]
 
   exporters = {

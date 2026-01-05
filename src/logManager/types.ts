@@ -3,7 +3,8 @@ export interface CharItem {
   name: string,
   IMUserId: string,
   role: '主持人' | '角色' | '骰子' | '隐藏',
-  color: string
+  color: string,
+  avatar?: string
 }
 
 export interface LogItem {
@@ -18,11 +19,15 @@ export interface LogItem {
   color?: string;
   role?: string;
   commandInfo?: any;
+  expressionTag?: string;
 
   // 如果为真，那么只有message有意义，且当作纯文本处理
   isRaw?: boolean;
   index?: number;
   version?: number;
+  overrideAvatar?: string;
+  images?: string[];
+  groupName?: string;
 }
 
 export function packNameId(i: CharItem | LogItem) {

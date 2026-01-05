@@ -1,9 +1,5 @@
 <template>
-  <!-- 这句是为了防止空元素占行 -->
   <div class="list-item-dynamic">
-    <span v-if="avatarOf(source)" class="_avatar" style="display:inline-block;vertical-align:middle;margin-right:6px">
-      <img :src="avatarOf(source)" alt="avatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover" />
-    </span>
     <span style="color: #aaa" class="_time" v-if="!store.exportOptions.timeHide">{{ timeSolve(source) }}</span>
     <span :style="{ 'color': colorByName(source) }" class="_nickname">{{ nicknameSolve(source) }}</span>
     <div :style="{ 'color': colorByName(source) }" v-html="previewMessageSolve(source)"></div>
@@ -26,22 +22,9 @@ defineProps({
 });
 
 const colorByName = (i: LogItem) => {
-  // const info = store.pcMap.get(`${i.nickname}-`);
   const info = store.pcMap.get(packNameId(i));
   return info?.color;
 }
-
-const avatarOf = (i: LogItem) => {
-  if (i.overrideAvatar) return i.overrideAvatar
-  const info = store.pcMap.get(packNameId(i))
-  if (!info) return undefined
-  if (i.expressionTag) {
-    const m = store.workbench.pcNameExpressionsMap.get(info.name) || {}
-    if (m[i.expressionTag]) return m[i.expressionTag]
-  }
-  return info.avatar
-}
-
 
 const nicknameSolve = (i: LogItem) => {
   let userid = '(' + i.IMUserId + ')'
@@ -51,7 +34,6 @@ const nicknameSolve = (i: LogItem) => {
   }
   return `<${i.nickname}${userid}>:`
 }
-
 
 const timeSolve = (i: LogItem) => {
   let timeText = i.time.toString()
@@ -79,18 +61,19 @@ const nameReplace = (msg: string) => {
   return msg
 }
 
-let canvasFontSize = '';
+let canvasFontSize = ''
 
 const previewMessageSolve = (i: LogItem) => {
   const id = packNameId(i);
   if (store.pcMap.get(id)?.role === '隐藏') return '';
 
-  let msg = msgImageFormat(escapeHTML(i.message), store.exportOptions, true);
+  const rawMessage = (i.message || '').replaceAll(/<br\s*\/?>/gi, '\n')
+  let msg = msgImageFormat(escapeHTML(rawMessage), store.exportOptions, true);
   msg = msgAtFormat(msg, store.pcList);
   msg = msgOffTopicFormat(msg, store.exportOptions, i.isDice);
   msg = msgCommandFormat(msg, store.exportOptions);
   msg = msgIMUseridFormat(msg, store.exportOptions, i.isDice);
-  msg = msgOffTopicFormat(msg, store.exportOptions, i.isDice); // 再过滤一次
+  msg = msgOffTopicFormat(msg, store.exportOptions, i.isDice);
 
   const prefix = (!store.exportOptions.timeHide ? `${timeSolve(i)}` : '') + nicknameSolve(i)
   if (i.isDice) {
@@ -100,14 +83,24 @@ const previewMessageSolve = (i: LogItem) => {
   let length = 0;
   if (store.exportOptions.textIndentFirst) {
     if (canvasFontSize === '') {
-      // store.previewElement as any
-      canvasFontSize = getCanvasFontSize(document.getElementById('preview') as any);
+      const el = document.getElementById('preview');
+      if (el) {
+        canvasFontSize = getCanvasFontSize(el);
+      } else {
+        canvasFontSize = getCanvasFontSize(document.body); 
+      }
     }
     length = getTextWidth(prefix, canvasFontSize);
+    const lines = msg.split('\n')
+    if (lines.length <= 1) return msg
+    return lines
+      .map((line, idx) => {
+        if (idx === 0) return line
+        if (!line) return '<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>'
+        return `<p style="text-indent: ${length}px; margin-top: 0; margin-bottom: 0">${line}</p>`
+      })
+      .join('')
   }
-  
-  // return msg.replaceAll('<br />', '\n').replaceAll('\n', '<br /> ' + `<span style="color:white">${prefix}</span>`)
-  return msg.replaceAll('<br />', '\n').replaceAll(/\n([^\n]+)/g, `<p style="text-indent: ${length}px; margin-top: 0; margin-bottom: 0">$1</p>`)
+  return msg.replaceAll('\n', '<br />')
 }
 </script>
- 

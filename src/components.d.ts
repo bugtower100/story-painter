@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BbsList: typeof import('./components/previews/bbs-list.vue')['default']
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
@@ -31,9 +32,15 @@ declare module 'vue' {
     PreviewBbsItem: typeof import('./components/previews/preview-bbs-item.vue')['default']
     PreviewBbsPineapple: typeof import('./components/previews/preview-bbs-pineapple.vue')['default']
     PreviewBbsPineappleItem: typeof import('./components/previews/preview-bbs-pineapple-item.vue')['default']
+    PreviewBubble: typeof import('./components/previews/preview-bubble.vue')['default']
+    PreviewBubbleItem: typeof import('./components/previews/preview-bubble-item.vue')['default']
+    PreviewBubbleItemCopy: typeof import('./components/previews/preview-bubble-item-copy.vue')['default']
     PreviewMain: typeof import('./components/previews/preview-main.vue')['default']
     PreviewMainItem: typeof import('./components/previews/preview-main-item.vue')['default']
+    PreviewMainItemNoavatar: typeof import('./components/previews/preview-main-item-noavatar.vue')['default']
+    PreviewMainNoavatar: typeof import('./components/previews/preview-main-noavatar.vue')['default']
     PreviewTableTr: typeof import('./components/previews/preview-table-tr.vue')['default']
+    PreviewTableTrNoavatar: typeof import('./components/previews/preview-table-tr-noavatar.vue')['default']
     PreviewTrg: typeof import('./components/previews/preview-trg.vue')['default']
     PreviewTrgItem: typeof import('./components/previews/preview-trg-item.vue')['default']
   }
