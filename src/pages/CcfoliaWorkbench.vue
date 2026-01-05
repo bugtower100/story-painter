@@ -28,7 +28,7 @@
           <n-button @click="() => bgInput?.click()">设置全局背景图</n-button>
           <input ref="bgInput" type="file" accept="image/*" style="display:none" @change="onBgChange" />
           
-          <n-button @click="() => containerBgInput?.click()">设置容器底图</n-button>
+          <n-button @click="() => containerBgInput?.click()">设置纸张背景</n-button>
           <input ref="containerBgInput" type="file" accept="image/*" style="display:none" @change="onContainerBgChange" />
 
           <n-button @click="() => bubbleBgInput?.click()">设置气泡背景图</n-button>
@@ -124,7 +124,7 @@ async function onContainerBgChange(e: Event) {
     store.workbench.containerBackgroundImage = reader.result as string; 
     store.workbenchSave(); 
     input.value = '';
-    message.success('容器底图已上传')
+    message.success('纸张背景已上传')
   }
   reader.readAsDataURL(file)
 }
