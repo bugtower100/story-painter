@@ -215,9 +215,9 @@ const createEditor = (editorContainer: any, doc: any) => {
     store.editor.destroy();
   }
 
-  const startState = EditorState.create({
-    //doc为编辑器默认内容
-    doc: `海豹一号机(2589922907) 2022/03/21 19:05:05
+  const initialDoc = (typeof doc === 'string' && doc.length > 0)
+    ? doc
+    : `海豹一号机(2589922907) 2022/03/21 19:05:05
 新的故事开始了，祝旅途愉快！
 记录已经开启。
 
@@ -300,7 +300,11 @@ const createEditor = (editorContainer: any, doc: any) => {
 海豹一号机(2589922907) 2022/03/21 19:14:35
 故事落下了帷幕。
 记录已经关闭。
-`,
+`
+
+  const startState = EditorState.create({
+    //doc为编辑器默认内容
+    doc: initialDoc,
     extensions: getExts(),
   });
 
@@ -312,7 +316,8 @@ const createEditor = (editorContainer: any, doc: any) => {
 }
 
 onMounted(() => {
-  createEditor(editor.value, '')
+  const existingDoc = store.editor?.state?.doc?.toString?.() || ''
+  createEditor(editor.value, existingDoc)
 })
 </script>
 

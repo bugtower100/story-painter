@@ -99,13 +99,16 @@
         </div>
     </div>
 </body>
-<script>var data = $$replace
+<script>var payload = $$replace
+    var iconAssets = (payload && payload.iconAssets) ? payload.iconAssets : {}
+    var data = (payload && payload.data) ? payload.data : payload
 
-    const template =({tab,speaker,displayMode,iconUrl,borderColor,textColor,placeholderChar,iconDisplayStyle,message,bubbleBgColor,bubbleArrowColor,showSeparator}) => 
-    `<div class="message-item export log-item" data-tab="${tab}" data-speaker="${speaker}" data-display-mode="${displayMode}">
+    const template =({tab,speaker,displayMode,iconUrl,borderColor,textColor,placeholderChar,iconDisplayStyle,message,bubbleBgColor,bubbleArrowColor,showSeparator}) => { 
+    const resolvedIconUrl = (iconUrl && iconAssets && iconAssets[iconUrl]) ? iconAssets[iconUrl] : (iconUrl || '')
+    return `<div class="message-item export log-item" data-tab="${tab}" data-speaker="${speaker}" data-display-mode="${displayMode}">
         <div class="message-container export">
             <div class="icon-container export" style="width:64px; height:64px;">
-                <img src="${iconUrl}" alt="${speaker} (default)" class="icon export"
+                <img src="${resolvedIconUrl}" alt="${speaker} (default)" class="icon export"
                     style="border-color: ${borderColor}; display: block;"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
                 <span class="icon-placeholder export"
@@ -131,6 +134,7 @@
             <span class="narration-message">${message}</span>
         </div>
     </div>`
+    }
 
     const container = document.getElementById('export-log-display')
     const content = document.getElementById('virtual-list-content')

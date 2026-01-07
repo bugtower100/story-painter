@@ -47,7 +47,7 @@ const list: Option[] = [
   {
     label: "首行缩进对齐",
     desc: "开启后，缩进将以名字为基准进行对齐",
-    key: 'textIndentAll',
+    key: 'textIndentFirst',
   },
 ]
 </script>

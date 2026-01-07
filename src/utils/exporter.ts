@@ -214,13 +214,7 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
   const store = useStore();
   const map = store.pcMap;
   const el = document.createElement('span');
-  const items: string[] = []
-  const chSet = new Set<string>()
-
-  let lastChannel = ''
-  console.log(results)
   const output = []
-  // Helper to convert image URL to Base64
   const getBase64Image = async (url: string) => {
     try {
       const response = await fetch(url);
@@ -232,33 +226,32 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
         reader.readAsDataURL(blob);
       });
     } catch (e) {
-      console.error('Failed to load image for export:', url, e);
-      return url; // Fallback to original URL
+      return url;
     }
   };
 
-  // Pre-process all avatars
-  const avatarMap = new Map<string, string>();
-  const avatarTasks = [];
+  const iconAssets: Record<string, string> = {}
+  const iconKeyBySource = new Map<string, string>()
+  const iconSources: string[] = []
 
   for (let i of results) {
     if (i.isRaw) continue;
-    const id = packNameId(i);
-    const avatar = pickAvatar(store, i)
-    if (avatar && !avatarMap.has(avatar)) {
-      // If it's a local path (not starting with data: or http), or just needs embedding
-      // Actually for single HTML file, we generally want everything embedded as Data URL
-      // unless it's already a Data URL.
-      if (!avatar.startsWith('data:')) {
-          avatarTasks.push(getBase64Image(avatar).then(base64 => avatarMap.set(avatar, base64)));
-      } else {
-          avatarMap.set(avatar, avatar);
-      }
-    }
+    const src = pickAvatar(store, i)
+    if (!src) continue;
+    if (iconKeyBySource.has(src)) continue;
+    iconSources.push(src)
+    iconKeyBySource.set(src, `a${iconSources.length - 1}`)
   }
-  
-  // Wait for all images to be converted
-  await Promise.all(avatarTasks);
+
+  await Promise.all(iconSources.map(async (src) => {
+    const key = iconKeyBySource.get(src)
+    if (!key) return
+    if (src.startsWith('data:')) {
+      iconAssets[key] = src
+      return
+    }
+    iconAssets[key] = await getBase64Image(src)
+  }))
 
   for (let i of results) {
     if (i.isRaw) continue;
@@ -275,19 +268,15 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
       inner = res[1]
     }
     const originalAvatar = pickAvatar(store, i)
-    const avatar = avatarMap.get(originalAvatar!) || originalAvatar
-
-    const initial = i.nickname?.trim()?.charAt(0) || '?'
-    const iconHtml = avatar ? `<img class="icon" src="${avatar}" />` : `<div class="icon placeholder">${initial}</div>`
+    const iconKey = originalAvatar ? (iconKeyBySource.get(originalAvatar) || '') : ''
     const alignRight = false
     const borderColor = map.get(id)?.color || '#333333'
-    console.log(i.commandInfo)
     output.push({
       time: i.time,
       "tab": (i as any).commandInfo?.channel || "main",
       "speaker": i.nickname,
       "displayMode": "bubble",
-      "iconUrl": avatar,
+      "iconUrl": iconKey,
       "borderColor": borderColor,
       "textColor": borderColor,
       "placeholderChar": i.nickname.charAt(0),
@@ -297,16 +286,6 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
       "bubbleArrowColor": store.workbench.bubbleColor || "#ffffff",
       "showSeparator": true
     })
-    const ch = ((i as any).commandInfo?.channel || 'main').toLowerCase()
-    chSet.add(ch)
-
-    if (lastChannel && lastChannel !== ch) {
-      items.push(`<hr class="tab-separator export">`)
-    }
-    lastChannel = ch
-
-    const block = `<div class="message-item" data-tab="${ch}"><div class="message-container${alignRight ? ' align-right' : ''}" style="--avatar-border-color:${borderColor}"><div class="icon-container">${iconHtml}</div><div class="content-container"><div class="speaker-name-default">${i.nickname}<span class="imuid">(${i.IMUserId})</span><span class="channel-name">[${ch}]</span></div><div class="bubble">${inner}</div></div></div></div>`
-    items.push(block)
   }
 
   // const bg = store.workbench.backgroundImage
@@ -320,7 +299,8 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
   // const script = `<script>(function(){const root=document.getElementById('log-display');const btns=document.querySelectorAll('.tab-button');const chFilters=document.querySelectorAll('.channel-filter');let currentTab='all';function update(){document.querySelectorAll('.message-item').forEach(item=>{const itemTab=item.getAttribute('data-tab');let visible=false;if(currentTab==='all'){const cb=document.querySelector('.channel-filter[data-channel="'+itemTab+'"]');visible=cb&&cb.checked;}else{visible=itemTab===currentTab;}item.classList.toggle('hidden',!visible);});document.querySelectorAll('.tab-separator').forEach(sep=>{sep.classList.toggle('hidden',currentTab!=='all')});}btns.forEach(b=>b.addEventListener('click',function(){btns.forEach(x=>x.classList.remove('active'));this.classList.add('active');currentTab=this.getAttribute('data-tab');update();}));chFilters.forEach(cb=>cb.addEventListener('change',update));function markOffTopic(){document.querySelectorAll('.bubble p').forEach(p=>{const t=(p.textContent||'').trim();if(/^\(?[（(]/.test(t)){p.classList.add('offtopic');}});}markOffTopic();})();</script>`
   // const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><style>${bubbleCss}</style></head><body class="${bodyClass}"><div class="log-export-container"><h1>${title}</h1>${nav}<div id="log-display" ${styleVars}>${items.join('\n')}</div></div>${script}</body></html>`
   // const name = getDefaultFilename()  
-  let html = store.templateHTML.replace('$$replace',JSON.stringify(output))
+  const payload = { data: output, iconAssets }
+  let html = store.templateHTML.replace('$$replace', JSON.stringify(payload))
 
   // Inject Title
   const title = store.workbench.title || '跑团记录'

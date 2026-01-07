@@ -8,7 +8,7 @@
       :buffer="10"
       >
         <template #item="{ item, index }">
-          <BBSItem :source="item" :global-index="index" />
+          <BBSItem :key="`${item.index}-${optionsKey}`" :source="item" :global-index="index" />
         </template>
       </BbsList>          
   </div>
@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { h, nextTick, onMounted, render, watch } from 'vue';
+import { computed, h, nextTick, onMounted, render, watch } from 'vue';
 import { useStore } from '~/store';
 import { LogItem, packNameId } from '~/logManager/types';
 // @ts-ignore
@@ -32,6 +32,19 @@ const props = defineProps<{
 
 const store = useStore();
 const message = useMessage();
+
+const optionsKey = computed(() => {
+  const o = store.exportOptions
+  return [
+    o.commandHide ? '1' : '0',
+    o.imageHide ? '1' : '0',
+    o.offTopicHide ? '1' : '0',
+    o.timeHide ? '1' : '0',
+    o.yearHide ? '1' : '0',
+    o.userIdHide ? '1' : '0',
+    o.textIndentFirst ? '1' : '0',
+  ].join('')
+})
 
 onMounted(() => {
   console.log(props)
