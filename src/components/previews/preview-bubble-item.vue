@@ -29,10 +29,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, render } from 'vue'
+import { computed } from 'vue'
+import dayjs from 'dayjs'
 import { LogItem, packNameId } from '~/logManager/types'
 import { useStore } from '~/store'
-import PreviewMainItemNoavatar from './preview-main-item-noavatar.vue'
+import { escapeHTML, getCanvasFontSize, getTextWidth, msgAtFormat, msgCommandFormat, msgIMUseridFormat, msgImageFormat, msgOffTopicFormat } from '~/utils'
 
 const store = useStore()
 const props = defineProps<{ source: LogItem }>()
@@ -56,18 +57,83 @@ const borderColor = computed(() => {
   return store.pcMap.get(id)?.color || '#333333'
 })
 
-const innerHtml = computed(() => {
-  const el = document.createElement('span')
-  const vnode = h(PreviewMainItemNoavatar, { source: props.source })
-  render(vnode, el)
-  let html = el.innerHTML
+const nicknameSolve = (i: LogItem) => {
+  let userid = '(' + i.IMUserId + ')'
+  const options = store.exportOptions
+  if (options.userIdHide) {
+    userid = ''
+  }
+  return `<${i.nickname}${userid}>:`
+}
 
-  html = html.replace(/<span[^>]*class="_time"[^>]*>[^<]*<\/span>\s*/g, '')
-    const res = /<\/span><div[^>]*?>([\s\S]*?)<\/div><\/div>$/.exec(html)
-    if (res){
-      html = res[1]
+const timeSolve = (i: LogItem) => {
+  let timeText = i.time.toString()
+  const options = store.exportOptions
+  if (options.timeHide) {
+    timeText = ''
+  } else {
+    if (typeof i.time === 'number' && i.time !== 0) {
+      timeText = dayjs.unix(i.time).format(options.yearHide ? 'HH:mm:ss' : 'YYYY/MM/DD HH:mm:ss')
+    } else {
+      if (i.timeText) {
+        timeText = i.timeText
+      } else {
+        timeText = dayjs.unix(i.time).format(options.yearHide ? 'HH:mm:ss' : 'YYYY/MM/DD HH:mm:ss')
+      }
     }
-  return html
+  }
+  return timeText
+}
+
+const nameReplace = (msg: string) => {
+  for (let i of store.pcList) {
+    msg = msg.replaceAll(`<${i.name}>`, `${i.name}`)
+  }
+  return msg
+}
+
+let canvasFontSize = ''
+
+const innerHtml = computed(() => {
+  const i = props.source
+  const id = packNameId(i)
+  if (store.pcMap.get(id)?.role === '隐藏') return ''
+
+  const rawMessage = (i.message || '').replaceAll(/<br\s*\/?>/gi, '\n')
+  let msg = msgImageFormat(escapeHTML(rawMessage), store.exportOptions, true)
+  msg = msgAtFormat(msg, store.pcList)
+  msg = msgOffTopicFormat(msg, store.exportOptions, i.isDice)
+  msg = msgCommandFormat(msg, store.exportOptions)
+  msg = msgIMUseridFormat(msg, store.exportOptions, i.isDice)
+  msg = msgOffTopicFormat(msg, store.exportOptions, i.isDice)
+
+  const prefix = (!store.exportOptions.timeHide ? `${timeSolve(i)}` : '') + nicknameSolve(i)
+  if (i.isDice) {
+    msg = nameReplace(msg)
+  }
+
+  if (store.exportOptions.textIndentFirst) {
+    if (canvasFontSize === '') {
+      const el = document.getElementById('preview')
+      if (el) {
+        canvasFontSize = getCanvasFontSize(el)
+      } else {
+        canvasFontSize = getCanvasFontSize(document.body)
+      }
+    }
+    const length = getTextWidth(prefix, canvasFontSize)
+    const lines = msg.split('\n')
+    if (lines.length <= 1) return msg
+    return lines
+      .map((line, idx) => {
+        if (idx === 0) return line
+        if (!line) return '<p style="margin-top: 0; margin-bottom: 0">&nbsp;</p>'
+        return `<p style="text-indent: ${length}px; margin-top: 0; margin-bottom: 0">${line}</p>`
+      })
+      .join('')
+  }
+
+  return msg.replaceAll('\n', '<br />')
 })
 </script>
 
