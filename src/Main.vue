@@ -26,12 +26,6 @@
           </template>
           <div v-if="!showWorkbench">
               <n-flex align="center" justify="center" class="mb-2">
-              <n-flex vertical align="center" class="mr-4">
-                 <n-button text @click="jumpToHelper">
-                   <img :src="helperPry" style="height: 72px; border-radius: 8px;" title="点击快速跳转到日志编辑器" />
-                 </n-button>
-                 <n-text class="text-sm text-black mt-1">↑点击快速跳转<br>至日志编辑器</n-text>
-              </n-flex>
               <div class="pc-list">
                 <div v-for="(i, index) in store.pcList">
                   <div style="display: flex; align-items: center; width: 30rem;">
@@ -79,6 +73,10 @@
               <n-button secondary type="primary" @click="exportRecordHTMLZip">下载HTML(ZIP)</n-button>
               <n-button type="primary" secondary @click="() => ccfInput?.click()">导入ccf的log文件</n-button>
               <n-button type="default" @click="openWorkbenchFromButton">打开工作台</n-button>
+              <n-radio-group v-model:value="editorMode" size="small">
+                <n-radio-button value="text">文本模式</n-radio-button>
+                <n-radio-button value="list">列表模式</n-radio-button>
+              </n-radio-group>
             </n-flex>
             <!-- <n-button @click="showPreview">预览</n-button> -->
             <div>
@@ -102,7 +100,7 @@
             <input :ref="setCcfInputRef" type="file" accept=".html,text/html" style="display:none" @change="onCcfFileChange" />
           </n-flex>
 
-          <code-mirror v-if="!showWorkbench" v-show="!(isShowPreview || isShowPreviewBBS || isShowPreviewTRG || isShowPreviewWithAvatar)" ref="editor"
+          <code-mirror v-if="!showWorkbench" v-show="!(isShowPreview || isShowPreviewBBS || isShowPreviewTRG || isShowPreviewWithAvatar) && editorMode === 'text'" ref="editor"
                        class="mt-4"
                        @change="onChange">
             <div class="z-50 absolute right-2 flex flex-col items-center">
@@ -119,6 +117,13 @@
               </div>
             </div>
           </code-mirror>
+
+          <log-list-editor 
+              v-if="!showWorkbench && editorMode === 'list' && !(isShowPreview || isShowPreviewBBS || isShowPreviewTRG || isShowPreviewWithAvatar)" 
+              :initial-content="store.editor?.state.doc.toString() || ''"
+              @update:content="onListEditorUpdate" 
+              class="mt-4"
+          />
 
           <n-message-provider v-if="!showWorkbench">
             <preview-main-noavatar :is-show="isShowPreview" :preview-items="previewItems"></preview-main-noavatar>
@@ -158,7 +163,7 @@ import PreviewTableTRNoavatar from './components/previews/preview-table-tr-noava
 import { LogItem, CharItem, packNameId } from "./logManager/types";
 import { setCharInfo } from './logManager/importers/_logImpoter'
 import { msgCommandFormat, msgImageFormat, msgIMUseridFormat, msgOffTopicFormat, msgAtFormat } from "./utils";
-import { NButton, NText, useMessage, useModal, useNotification } from "naive-ui";
+import { NButton, NText, useMessage, useModal, useNotification, NRadioGroup, NRadioButton } from "naive-ui";
 import { User, LogoGithub, Delete as IconDelete } from '@vicons/carbon'
 import { breakpointsTailwind, useBreakpoints, useDark, useToggle } from '@vueuse/core'
 import OptionView from "./components/OptionView.vue";
@@ -168,9 +173,10 @@ import { parquetReadObjects } from 'hyparquet'
 import { asyncBufferFrom } from 'hyperparam'
 import { compressors } from 'hyparquet-compressors'
 import CcfoliaWorkbench from './pages/CcfoliaWorkbench.vue'
-import helperPry from './assets/普瑞酱.png'
+import LogListEditor from './pages/LogListEditor.vue'
 
 const showWorkbench = ref(false)
+const editorMode = ref<'text' | 'list'>('text')
 const openWorkbench = () => { showWorkbench.value = true }
 const closeWorkbench = () => { showWorkbench.value = false }
 const openWorkbenchFromButton = () => {
@@ -180,8 +186,6 @@ const openWorkbenchFromButton = () => {
 window.addEventListener('hashchange', () => {
   showWorkbench.value = location.hash === '#workbench'
 })
-
-const jumpToHelper = () => window.open('https://helperpry.bugtower.top/%E5%90%88%E5%B9%B6txt%E5%B7%A5%E5%85%B7', '_blank')
 
 function hexToRgb(hex: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -896,6 +900,14 @@ const exportOptions = computed(() => store.exportOptions)
 watch(exportOptions, reloadFunc, { deep: true })
 
 const code = ref("")
+
+const onListEditorUpdate = (text: string) => {
+  if (store.editor) {
+    store.editor.dispatch({
+      changes: { from: 0, to: store.editor.state.doc.length, insert: text }
+    })
+  }
+}
 
 fetch('/template.html').then(res => res.text()).then(res => {
   store.templateHTML = res
