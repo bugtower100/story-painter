@@ -52,6 +52,20 @@ async function idbGetAsset(key: string): Promise<string | undefined> {
   })
 }
 
+function getCurrentLogKeyFromUrl(): string {
+  if (typeof location === 'undefined') return ''
+  try {
+    return (new URLSearchParams(location.search).get('key') || '').trim()
+  } catch {
+    return ''
+  }
+}
+
+function getWorkbenchStorageKey(): string {
+  const k = getCurrentLogKeyFromUrl()
+  return k ? `workbench:${k}` : 'workbench'
+}
+
 export const useStore = defineStore('main', {
   state: () => {
     return {
@@ -184,14 +198,33 @@ export const useStore = defineStore('main', {
     },
 
     workbenchSave() {
+      const storageKey = getWorkbenchStorageKey()
       const wb = this.workbench
       const expObj: Record<string, Record<string, string>> = {}
-      for (const [name, exps] of wb.pcNameExpressionsMap) expObj[name] = exps
-
+      const expObjKeys: Record<string, Record<string, string>> = {}
       const isLargeDataUrl = (v: string) => typeof v === 'string' && v.startsWith('data:') && v.length > 50_000
-      const backgroundImageKey = isLargeDataUrl(wb.backgroundImage) ? 'workbench:backgroundImage' : ''
-      const bubbleBackgroundImageKey = isLargeDataUrl(wb.bubbleBackgroundImage) ? 'workbench:bubbleBackgroundImage' : ''
-      const containerBackgroundImageKey = isLargeDataUrl(wb.containerBackgroundImage) ? 'workbench:containerBackgroundImage' : ''
+
+      for (const [name, exps] of wb.pcNameExpressionsMap) {
+        const record: Record<string, string> = {}
+        const recordKeys: Record<string, string> = {}
+        for (const tag of Object.keys(exps || {})) {
+          const url = exps[tag]
+          if (isLargeDataUrl(url)) {
+            const assetKey = `${storageKey}:expression:${encodeURIComponent(name)}:${encodeURIComponent(tag)}`
+            record[tag] = ''
+            recordKeys[tag] = assetKey
+            void idbSetAsset(assetKey, url)
+          } else {
+            record[tag] = url
+          }
+        }
+        expObj[name] = record
+        if (Object.keys(recordKeys).length) expObjKeys[name] = recordKeys
+      }
+
+      const backgroundImageKey = isLargeDataUrl(wb.backgroundImage) ? `${storageKey}:backgroundImage` : ''
+      const bubbleBackgroundImageKey = isLargeDataUrl(wb.bubbleBackgroundImage) ? `${storageKey}:bubbleBackgroundImage` : ''
+      const containerBackgroundImageKey = isLargeDataUrl(wb.containerBackgroundImage) ? `${storageKey}:containerBackgroundImage` : ''
 
       if (backgroundImageKey) void idbSetAsset(backgroundImageKey, wb.backgroundImage)
       if (bubbleBackgroundImageKey) void idbSetAsset(bubbleBackgroundImageKey, wb.bubbleBackgroundImage)
@@ -213,18 +246,20 @@ export const useStore = defineStore('main', {
         rightBubbleColor: wb.rightBubbleColor,
         bubbleColor: wb.bubbleColor,
         iconSize: wb.iconSize,
-        pcNameExpressionsMap: expObj
+        pcNameExpressionsMap: expObj,
+        pcNameExpressionsMapKeys: expObjKeys
       }
 
       try {
-        localStorage.setItem('workbench', JSON.stringify(payload))
+        localStorage.setItem(storageKey, JSON.stringify(payload))
       } catch (e) {
         if (e instanceof DOMException && e.name === 'QuotaExceededError') {
           try {
-            localStorage.removeItem('workbench')
-            localStorage.setItem('workbench', JSON.stringify({
+            localStorage.removeItem(storageKey)
+            localStorage.setItem(storageKey, JSON.stringify({
               ...payload,
-              pcNameExpressionsMap: {}
+              pcNameExpressionsMap: {},
+              pcNameExpressionsMapKeys: {}
             }))
           } catch (_e2) {
           }
@@ -235,7 +270,22 @@ export const useStore = defineStore('main', {
     },
 
     workbenchLoad() {
-      const data = JSON.parse(localStorage.getItem('workbench') || '{}')
+      const storageKey = getWorkbenchStorageKey()
+      let raw = localStorage.getItem(storageKey)
+      const urlKey = getCurrentLogKeyFromUrl()
+      if (!raw && urlKey) {
+        const legacy = localStorage.getItem('workbench')
+        if (legacy) {
+          raw = legacy
+          try {
+            localStorage.setItem(storageKey, legacy)
+            localStorage.removeItem('workbench')
+          } catch {
+          }
+        }
+      }
+
+      const data = JSON.parse(raw || '{}')
       if (!data) return
       this.workbench.title = data.title || ''
       this.workbench.backgroundImage = data.backgroundImage || ''
@@ -250,8 +300,25 @@ export const useStore = defineStore('main', {
       this.workbench.containerOpacity = data.containerOpacity !== undefined ? data.containerOpacity : 90
       this.workbench.iconSize = data.iconSize || 64
       const expObj = data.pcNameExpressionsMap || {}
+      const expObjKeys = data.pcNameExpressionsMapKeys || {}
       this.workbench.pcNameExpressionsMap = new Map<string, Record<string,string>>()
-      for (const name of Object.keys(expObj)) this.workbench.pcNameExpressionsMap.set(name, expObj[name])
+      const names = new Set<string>([...Object.keys(expObj), ...Object.keys(expObjKeys)])
+      for (const name of names) {
+        const record: Record<string, string> = { ...(expObj[name] || {}) }
+        const recordKeys: Record<string, string> = expObjKeys[name] || {}
+        for (const tag of Object.keys(recordKeys)) {
+          if (!record[tag]) record[tag] = ''
+          const key = recordKeys[tag]
+          if (key) {
+            void idbGetAsset(key).then(v => {
+              if (typeof v !== 'string') return
+              const cur = this.workbench.pcNameExpressionsMap.get(name) || {}
+              this.workbench.pcNameExpressionsMap.set(name, { ...cur, [tag]: v })
+            })
+          }
+        }
+        this.workbench.pcNameExpressionsMap.set(name, record)
+      }
 
       const backgroundImageKey = data.backgroundImageKey || ''
       const bubbleBackgroundImageKey = data.bubbleBackgroundImageKey || ''

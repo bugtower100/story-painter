@@ -8,7 +8,7 @@
       :buffer="10"
       >
         <template #item="{ item, index }">
-          <BBSItem :key="`${item.index}-${optionsKey}`" :source="item" :global-index="index" />
+          <BBSItem :key="`${item.index}-${optionsKey}`" :source="item" />
         </template>
       </BbsList>          
   </div>
@@ -22,7 +22,7 @@ import { LogItem, packNameId } from '~/logManager/types';
 // @ts-ignore
 import VirtualList from 'vue3-virtual-scroll-list';
 import BbsList from './bbs-list.vue'
-import BBSItem from '~/components/previews/preview-bubble-item.vue'
+import BBSItem from '~/components/previews/preview-bbs-item.vue'
 import { useMessage } from 'naive-ui';
 
 const props = defineProps<{

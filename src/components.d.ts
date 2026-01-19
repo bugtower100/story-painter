@@ -12,7 +12,6 @@ declare module 'vue' {
     LogListEditorItem: typeof import('./components/LogListEditorItem.vue')['default']
     NButton: typeof import('naive-ui')['NButton']
     NCheckbox: typeof import('naive-ui')['NCheckbox']
-    NCheckboxGroup: typeof import('naive-ui')['NCheckboxGroup']
     NColorPicker: typeof import('naive-ui')['NColorPicker']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDivider: typeof import('naive-ui')['NDivider']
