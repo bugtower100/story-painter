@@ -3,7 +3,7 @@ import { useStore } from "~/store";
 import { CharItem, LogItem } from "../types";
 import { LogImporter } from "./_logImpoter";
 
-export const reQQExportLineTest = /^(\d{4}-\d{2}-\d{2} \d{1,2}:\d{1,2}:\d{1,2})\s+(.+?)(\([^)]+\)|\<[^>]+\>)$/m
+export const reQQExportLineTest = /^(\d{4}-\d{2}-\d{2} \d{1,2}:\d{1,2}:\d{1,2})\s+(.+?)((?:\([^)]+\)|（[^）]+）|<[^>]+>))$/m
 export const reQQExport = new RegExp(reQQExportLineTest, 'gm')
 
 

@@ -10,9 +10,9 @@ import { completeFromList } from "@codemirror/autocomplete"
 import { CharItem } from "~/logManager/types"
 import { Extension } from "@codemirror/state";
 import * as twColors from 'tailwindcss/colors'
-export const reNameLine = /^([^(<\n]+(\((?!\d+\))[^(\n]+\))?)(\(\d+\))?(?:\s*#([^\s\[]+))?(\s+)(\d{4}\/\d{1,2}\/\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)?/
+export const reNameLine = /^([^(<\n]+((?:\((?!\d+\))[^(\n]+\))|（(?!\d+）)[^（\n]+）)?)(?:((?:\(\d+\)|（\d+）)))?(?:\s*#([^\s\[]+))?(\s+)(\d{4}\/\d{1,2}\/\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)?/
 // export const reNameLine = /^([^(<\n]+)(\([^(\n]+\)|\<[^(\n]+\>)?(\s+)(\d{4}\/\d{1,2}\/\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)?/
-export const reNameLine2 = /([^(<\n]+)(\([^(\n]+\)|\<[^(\n]+\>)?(?:\s*#([^\s\[]+))?(\s+)(\d{4}\/\d{1,2}\/\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)?/g
+export const reNameLine2 = /([^(<\n]+)([(（][^\)）\n]+[)）]|\<[^(\n]+\>)?(?:\s*#([^\s\[]+))?(\s+)(\d{4}\/\d{1,2}\/\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)?/g
 
 let nameReplace = (n: string) => {
   return n.replaceAll('.', '·').replaceAll(' ', '_').replaceAll(`/`, '_') //.replaceAll('(', '（').replaceAll(')', '）')

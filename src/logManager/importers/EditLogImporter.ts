@@ -3,7 +3,7 @@ import { CharItem, LogItem, packNameId } from "../types";
 import { LogImporter, TextInfo } from "./_logImpoter";
 
 // 注: 某种情况下，发言条的句末会带一个空格，已调整（某版本赵骰，原始文件及从上方文本框复制时）
-export const reEditLogTest = /^([^(<\n]+)(\(([^(\n]+)\)|\<[^(\n]+\>)?(\s*)(?:#([^\s\[]+))?(\s+)(\d{4}\/\d{1,2}\/\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)?(?: \[([^\]\n]+)\])? ?$/m
+export const reEditLogTest = /^([^(<\n]+)((?:[(（]([^\)）\n]+)[)）]|\<[^(\n]+\>))?(\s*)(?:#([^\s\[]+))?(\s+)(\d{4}\/\d{1,2}\/\d{1,2} )?(\d{1,2}:\d{1,2}:\d{2})( #\d+)?(?: \[([^\]\n]+)\])? ?$/m
 export const reEditLog = new RegExp(reEditLogTest, 'gm')
 
 

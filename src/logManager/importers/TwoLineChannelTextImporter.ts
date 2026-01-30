@@ -1,7 +1,7 @@
 import { LogImporter, TextInfo } from './_logImpoter'
 import type { CharItem, LogItem } from '../types'
 
-const headerRe = /^\s*-?\s*([^\(]+)\(([^)]+)\)\s*(?:#([^\s\[]+))?\s+(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})(?:\s+\[([^\]]+)\])?\s*$/
+const headerRe = /^\s*-?\s*([^\(（]+)[(（]([^\)）]+)[)）]\s*(?:#([^\s\[]+))?\s+(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})(?:\s+\[([^\]]+)\])?\s*$/
 
 function isDiceMessage(msg: string): boolean {
   if (/\b\d+[dD]\d+\b/.test(msg)) return true

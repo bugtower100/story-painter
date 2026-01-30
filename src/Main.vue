@@ -758,6 +758,7 @@ const nameChanged = (i: CharItem) => {
               type: 'primary', onClick: () => {
                 try {
                   logMan.rename(i, oldName, newName)
+                  store.renamePcName(oldName, newName)
                 } catch (_e) {
                   i.name = oldName;
                 } finally {

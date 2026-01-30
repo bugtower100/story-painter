@@ -406,6 +406,58 @@ export const useStore = defineStore('main', {
       }
     },
 
+    renamePcName(oldName: string, newName: string) {
+      if (!oldName || !newName) return
+      if (oldName === newName) return
+
+      const color = this.pcNameColorMap.get(oldName)
+      if (color && !this.pcNameColorMap.has(newName)) {
+        this.pcNameColorMap.set(newName, color)
+      }
+      this.pcNameColorMap.delete(oldName)
+      this.colorMapSave()
+
+      const avatar = this.pcNameAvatarMap.get(oldName)
+      if (avatar && !this.pcNameAvatarMap.has(newName)) {
+        this.pcNameAvatarMap.set(newName, avatar)
+      }
+      this.pcNameAvatarMap.delete(oldName)
+      this.avatarMapSave()
+
+      const exps = this.workbench.pcNameExpressionsMap.get(oldName)
+      if (exps) {
+        const cur = this.workbench.pcNameExpressionsMap.get(newName) || {}
+        this.workbench.pcNameExpressionsMap.set(newName, { ...exps, ...cur })
+        this.workbench.pcNameExpressionsMap.delete(oldName)
+      }
+
+      try {
+        const storageKey = getWorkbenchStorageKey()
+        const raw = localStorage.getItem(storageKey)
+        if (!raw) return
+        const data = JSON.parse(raw || '{}')
+        if (!data || typeof data !== 'object') return
+
+        const mapObj = (data.pcNameExpressionsMap || {}) as Record<string, Record<string, string>>
+        const mapKeysObj = (data.pcNameExpressionsMapKeys || {}) as Record<string, Record<string, string>>
+
+        if (mapObj[oldName]) {
+          mapObj[newName] = { ...(mapObj[oldName] || {}), ...(mapObj[newName] || {}) }
+          delete mapObj[oldName]
+          data.pcNameExpressionsMap = mapObj
+        }
+
+        if (mapKeysObj[oldName]) {
+          mapKeysObj[newName] = { ...(mapKeysObj[oldName] || {}), ...(mapKeysObj[newName] || {}) }
+          delete mapKeysObj[oldName]
+          data.pcNameExpressionsMapKeys = mapKeysObj
+        }
+
+        localStorage.setItem(storageKey, JSON.stringify(data))
+      } catch {
+      }
+    },
+
     async tryRemovePC(name: string) {
       let index = 0
       for (let i of this.pcList) {
