@@ -265,7 +265,7 @@ watch(() => props.initialContent, (text) => {
 })
 
 const parseInitialContent = (text: string) => {
-   const result = doProcessFiles([{ text, groupName: '' }])
+   const result = doProcessFiles([{ text, groupName: '' }], { sortByTimestamp: false })
    mergedLogs.value = result.logs.map((log, idx) => ({
       ...log,
       _id: idx,
@@ -444,9 +444,10 @@ const processFiles = async () => {
    }
 }
 
-const doProcessFiles = (fileData: { text: string, groupName: string }[]) => {
+const doProcessFiles = (fileData: { text: string, groupName: string }[], options?: { sortByTimestamp?: boolean }) => {
    let allLogs: any[] = []
    let hasNoDateLog = false
+   const sortByTimestamp = options?.sortByTimestamp !== false
    
    const regex = /^(.+?)\((\d+)\)(?:\s*#([^\s\[]+))?\s+(\d{4}\/\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{1,2}:\d{1,2})(?:\s+\[([^\]]+)\])?(.*)$/
    const timeOnlyRegex = /^(.+?)\((\d+)\)(?:\s*#([^\s\[]+))?\s+(\d{1,2}:\d{1,2}:\d{1,2})(?:\s+\[([^\]]+)\])?(.*)$/
@@ -511,7 +512,9 @@ const doProcessFiles = (fileData: { text: string, groupName: string }[]) => {
       if (currentLog) allLogs.push(currentLog)
    })
    
-   allLogs.sort((a, b) => a.timestamp - b.timestamp)
+   if (sortByTimestamp) {
+      allLogs.sort((a, b) => a.timestamp - b.timestamp)
+   }
    return { logs: allLogs, hasNoDateLog }
 }
 
