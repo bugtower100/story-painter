@@ -1,6 +1,13 @@
 <template>
-  <div class="log-entry" :style="itemStyle" :id="'log-item-' + index">
+  <div class="log-entry" :class="{ 'is-drag-over': isDragOver }" :style="itemStyle" :id="'log-item-' + index" @dragenter.prevent="onDragEnter" @dragleave="onDragLeave" @dragover.prevent="onDragOver" @drop.prevent="onDrop">
       <n-flex align="center" class="mb-1">
+          <span class="drag-handle" draggable="true" @dragstart="onDragStart" @dragend="onDragEnd">
+            <n-icon size="18" style="color: #9ca3af;">
+              <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 4a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 7 4Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 7 10Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 7 16Zm8-12a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 15 4Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 15 10Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 15 16Z"/>
+              </svg>
+            </n-icon>
+          </span>
           <n-checkbox v-model:checked="source._selected" />
           <n-text class="font-bold text-purple-700">{{ source.nameAndId }}</n-text>
           <n-input v-model:value="source.diffName" placeholder="差分" size="tiny" style="width: 80px" @change="onChange" />
@@ -28,8 +35,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { NFlex, NCheckbox, NText, NInput, NButton } from 'naive-ui'
+import { computed, ref } from 'vue'
+import { NFlex, NCheckbox, NText, NInput, NButton, NIcon } from 'naive-ui'
 
 const props = defineProps<{
   source: any
@@ -38,6 +45,7 @@ const props = defineProps<{
   onDelete: (index: number) => void
   onInsert: (index: number) => void
   onChange: () => void
+  onMove: (dragId: string, targetId: string, placeAfter: boolean) => void
 }>()
 
 const itemStyle = computed(() => {
@@ -55,6 +63,46 @@ const onContentUpdate = (val: string) => {
    props.source.content = val.split('\n')
    props.onChange()
 }
+
+const isDragOver = ref(false)
+
+const onDragStart = (e: DragEvent) => {
+  if (!e.dataTransfer) return
+  e.dataTransfer.effectAllowed = 'move'
+  e.dataTransfer.setData('text/plain', String(props.source._id))
+}
+
+const onDragEnd = () => {
+  isDragOver.value = false
+}
+
+const onDragEnter = () => {
+  isDragOver.value = true
+}
+
+const onDragLeave = (e: DragEvent) => {
+  const cur = e.currentTarget as HTMLElement | null
+  const rel = e.relatedTarget as Node | null
+  if (cur && rel && cur.contains(rel)) return
+  isDragOver.value = false
+}
+
+const onDragOver = () => {
+  isDragOver.value = true
+}
+
+const onDrop = (e: DragEvent) => {
+  isDragOver.value = false
+  const dragId = e.dataTransfer?.getData('text/plain')
+  if (!dragId) return
+  const targetId = String(props.source._id)
+  if (dragId === targetId) return
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const placeAfter = e.clientY - rect.top > rect.height / 2
+  props.onMove(String(dragId), targetId, placeAfter)
+}
 </script>
 
 <style scoped>
@@ -66,6 +114,22 @@ const onContentUpdate = (val: string) => {
 }
 .log-entry:hover {
    background: #f9f9f9;
+}
+.log-entry.is-drag-over {
+   outline: 2px solid #c084fc;
+   outline-offset: -2px;
+   background: #faf5ff;
+}
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px;
+  cursor: grab;
+  user-select: none;
+}
+.drag-handle:active {
+  cursor: grabbing;
 }
 .insert-divider {
    height: 10px;

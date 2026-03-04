@@ -154,6 +154,7 @@ const selectedFiles = ref<File[]>([])
 const fileGroupNames = ref<string[]>([])
 const processing = ref(false)
 const mergedLogs = ref<any[]>([])
+const lastSyncedContent = ref('')
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
@@ -227,7 +228,8 @@ const extraProps = computed(() => ({
    getColor,
    onDelete: deleteLog,
    onInsert: (idx: number) => openInsertModal(idx),
-   onChange: onLogChange
+   onChange: onLogChange,
+   onMove: moveLog
 }))
 
 // --- Initialization ---
@@ -235,6 +237,7 @@ const extraProps = computed(() => ({
 onMounted(() => {
    if (props.initialContent) {
       parseInitialContent(props.initialContent)
+      lastSyncedContent.value = props.initialContent
    }
    const onResize = () => {
       drawTimeline()
@@ -253,6 +256,13 @@ watch([mergedLogs, filteredLogs, filterGroups], () => {
       onScroll()
    })
 }, { deep: true })
+
+watch(() => props.initialContent, (text) => {
+   const v = text || ''
+   if (v === lastSyncedContent.value) return
+   parseInitialContent(v)
+   lastSyncedContent.value = v
+})
 
 const parseInitialContent = (text: string) => {
    const result = doProcessFiles([{ text, groupName: '' }])
@@ -345,7 +355,9 @@ const generateContent = () => {
 }
 
 const emitUpdate = debounce(() => {
-   emit('update:content', generateContent())
+   const v = generateContent()
+   lastSyncedContent.value = v
+   emit('update:content', v)
 }, 500)
 
 const onLogChange = () => {
@@ -507,6 +519,24 @@ const doProcessFiles = (fileData: { text: string, groupName: string }[]) => {
 
 const deleteLog = (index: number) => {
    mergedLogs.value.splice(index, 1)
+   emitUpdate()
+}
+
+const moveLog = (dragId: string, targetId: string, placeAfter: boolean) => {
+   const fromIndex = mergedLogs.value.findIndex(l => String(l?._id) === String(dragId))
+   const targetIndexBeforeRemove = mergedLogs.value.findIndex(l => String(l?._id) === String(targetId))
+   if (fromIndex < 0 || targetIndexBeforeRemove < 0) return
+   if (fromIndex === targetIndexBeforeRemove) return
+
+   const moved = mergedLogs.value.splice(fromIndex, 1)[0]
+   let targetIndex = targetIndexBeforeRemove
+   if (fromIndex < targetIndex) targetIndex -= 1
+
+   let insertIndex = placeAfter ? targetIndex + 1 : targetIndex
+   if (insertIndex < 0) insertIndex = 0
+   if (insertIndex > mergedLogs.value.length) insertIndex = mergedLogs.value.length
+
+   mergedLogs.value.splice(insertIndex, 0, moved)
    emitUpdate()
 }
 

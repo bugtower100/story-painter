@@ -25,7 +25,7 @@
             正在试图加载远程记录……
           </template>
           <div v-if="!showWorkbench">
-              <n-flex align="center" justify="center" class="mb-2">
+              <n-flex align="center" justify="center" class="mb-2" wrap>
               <div class="pc-list">
                 <div v-for="(i, index) in store.pcList">
                   <div style="display: flex; align-items: center; width: 30rem;">
@@ -39,6 +39,18 @@
                       <span v-if="notMobile">删除</span>
                     </n-button>
     
+                    <n-tooltip v-if="nameHasParen(i.name)" placement="top">
+                      <template #trigger>
+                        <n-icon size="18" style="margin: 0 6px 0 8px; color: #f59e0b;">
+                          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" />
+                            <path d="M16 9v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            <circle cx="16" cy="23" r="1.6" fill="currentColor" />
+                          </svg>
+                        </n-icon>
+                      </template>
+                      名字含括号，可能导致染色失败
+                    </n-tooltip>
                     <n-input :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewTRG" v-model:value="i.name"
                              class="w-50 m-2"
                              :prefix-icon="User" @focus="nameFocus(i)" @change="nameChanged(i)"/>
@@ -58,6 +70,11 @@
                     " type="file" accept="image/*" style="display:none" @change="(e) => onAvatarFileChange(e, i)" />
                   </div>
                 </div>
+              </div>
+              <div style="max-width: 13em; margin-left: 1rem;">
+                <n-text type="warning" class="block leading-relaxed">
+                  提醒：名字中带括号可能导致log条目染色失败，请及时更改名字。从外部输入的log请提前修改名字，否则无法读取带括号的名字的条目。
+                </n-text>
               </div>
             </n-flex>
           </div>
@@ -120,7 +137,7 @@
 
           <log-list-editor 
               v-if="!showWorkbench && editorMode === 'list' && !(isShowPreview || isShowPreviewBBS || isShowPreviewTRG || isShowPreviewWithAvatar)" 
-              :initial-content="store.editor?.state.doc.toString() || ''"
+              :initial-content="editorText"
               @update:content="onListEditorUpdate" 
               class="mt-4"
           />
@@ -227,6 +244,8 @@ const containerStyle = computed(() => {
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const notMobile = breakpoints.greater('sm')
+
+const nameHasParen = (name: string) => /[()（）]/.test(name || '')
 
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
@@ -660,6 +679,11 @@ const store = useStore()
 store.colorMapLoad();
 store.avatarMapLoad();
 
+const editorText = ref('')
+watch(() => store.editor, (ed) => {
+  editorText.value = ed?.state?.doc?.toString() || ''
+}, { immediate: true })
+
 // 修改ot选项后重建items
 watch(() => store.exportOptions.offTopicHide, showPreview)
 
@@ -775,6 +799,7 @@ const nameChanged = (i: CharItem) => {
 
 
 logMan.ev.on('textSet', (text) => {
+  editorText.value = text || ''
   store.editor.dispatch({
     changes: { from: 0, to: store.editor.state.doc.length, insert: text }
   });
@@ -795,6 +820,7 @@ const onChange = (v: ViewUpdate) => {
   let payloadText = '';
   if (v) {
     if (v.docChanged) {
+      editorText.value = store.editor?.state?.doc?.toString() || ''
       // 有一种我不太清楚的特殊情况会导致二次调用，从而使得pclist清零
       // 看不出明显变化，只是一个隐藏参数flags为0
       // 破案了，是flush
@@ -903,6 +929,7 @@ watch(exportOptions, reloadFunc, { deep: true })
 const code = ref("")
 
 const onListEditorUpdate = (text: string) => {
+  editorText.value = text || ''
   if (store.editor) {
     store.editor.dispatch({
       changes: { from: 0, to: store.editor.state.doc.length, insert: text }
