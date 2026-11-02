@@ -1,7 +1,7 @@
 import { LogImporter, TextInfo } from './_logImpoter'
 import type { CharItem, LogItem } from '../types'
 
-const headerRe = /^\s*-?\s*([^\(（]+)[(（]([^\)）]+)[)）]\s*(?:#([^\s\[]+))?\s+(\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}:\d{2})(?:\s+\[([^\]]+)\])?\s*$/
+import { reEditLogHeader as headerRe } from "../logHeader";
 
 function isDiceMessage(msg: string): boolean {
   if (/\b\d+[dD]\d+\b/.test(msg)) return true
@@ -15,7 +15,7 @@ export class TwoLineChannelTextImporter extends LogImporter {
   check(text: string): boolean {
     const lines = text.split(/\r?\n/)
     for (let i = 0; i < lines.length; i++) {
-      if (headerRe.test(lines[i])) return true
+      if (headerRe.exec(lines[i].replace(/^\s*-\s+/, ''))?.[10]) return true
     }
     return false
   }
@@ -26,13 +26,13 @@ export class TwoLineChannelTextImporter extends LogImporter {
     let idx = 0
     while (idx < lines.length) {
       const header = lines[idx]
-      const m = header.match(headerRe)
+      const m = header.replace(/^\s*-\s+/, '').match(headerRe)
       if (!m) { idx += 1; continue }
       const nickname = m[1].trim()
-      const imuidRaw = m[2].trim()
-      const expressionTagRaw = (m[3] || '').trim()
-      const timeTextRaw = m[4].trim()
-      const channelRaw = m[5] || 'main'
+      const imuidRaw = m[2] ? m[2].slice(1, -1).trim() : ''
+      const expressionTagRaw = (m[5] || '').trim()
+      const timeTextRaw = ((m[7] || '') + m[8]).trim()
+      const channelRaw = m[10] || 'main'
       const channel = channelRaw.toLowerCase()
       idx += 1
       const bodyLines: string[] = []

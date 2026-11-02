@@ -356,6 +356,15 @@ export const useStore = defineStore('main', {
       return resp.data
     },
 
+    async tryFetchRKey() {
+      const resp = await axios.get('https://dice-api.weizaima.com/api/v1/rkey')
+      return resp.data as {
+        private_rkey?: string
+        group_rkey?: string
+        expired_time?: number
+      }
+    },
+
     /** 移除不使用的pc名字 */
     async pcNameRefresh() {
       const names = new Set();
