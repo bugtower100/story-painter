@@ -113,7 +113,7 @@ body { background: var(--sp-bg); }
 .sp-identity-actions .sp-text-button { font-size: 12px !important; padding: 2px; }
 .sp-identity-actions .sp-text-button:first-child { color: var(--sp-primary); font-weight: 600; }
 .sp-character { padding: 10px; border-radius: 10px; background: var(--sp-inset); display: grid; grid-template-columns: 34px minmax(0, 1fr) 29px; gap: 9px; align-items: center; margin-bottom: 7px; }
-.sp-avatar { width: 34px; height: 34px; padding: 0; border-radius: 11px; border: 1px solid color-mix(in srgb, var(--character-color) 35%, transparent); color: var(--character-color); background: color-mix(in srgb, var(--character-color) 10%, var(--sp-surface)); overflow: hidden; font-weight: 600; }
+.sp-avatar { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; line-height: 1; border-radius: 11px; border: 1px solid color-mix(in srgb, var(--character-color) 35%, transparent); color: var(--character-color); background: color-mix(in srgb, var(--character-color) 10%, var(--sp-surface)); overflow: hidden; font-weight: 600; }
 .sp-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .sp-character-info { min-width: 0; }
 .sp-character-color .n-color-picker-trigger__value { display: none; }

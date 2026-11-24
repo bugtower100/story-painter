@@ -39,7 +39,7 @@
             </article>
             <button v-if="outlineLimit < outline.length" @click="outlineLimit += 200">显示更多编排项</button>
           </div>
-          <button class="wb-manage" @click="openArrangement(activeChannel)">管理频道、导入与内容块 ↗</button>
+          <button class="wb-manage" @click="openArrangement(activeChannel)">导入、管理分窗和内容块 ↗</button>
           <section v-if="activeMessage" class="wb-message-editor">
             <header><strong>{{ activeMessage.nickname }}</strong><small>{{ activeMessage.IMUserId }}</small></header>
             <label>发言正文<textarea ref="messageInput" v-model="messageText" aria-label="选中发言正文" rows="7" @input="emit('update-text', selectedIndex, ($event.target as HTMLTextAreaElement).value)" @blur="emit('finish-edit')" /></label>
