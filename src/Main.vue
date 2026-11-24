@@ -43,7 +43,9 @@
                   <div class="sp-character-info">
                     <CharacterIdentityEditor :character="i" @save="(name, account) => saveCharacterIdentity(i, name, account)" />
                   </div>
-                  <n-color-picker v-model:value="i.color" class="sp-character-color" :show-alpha="false" :swatches="colors" :on-update:value="(v) => colorChanged(v, i)" :aria-label="i.name + ' 的颜色'" />
+                  <n-color-picker v-model:value="i.color" class="sp-character-color" :show-alpha="false" :swatches="colors" :on-update:value="(v) => colorChanged(v, i)" :aria-label="i.name + ' 的颜色'">
+                    <template #label><span class="sr-only">{{ i.color }}</span></template>
+                  </n-color-picker>
                   <div class="sp-character-bottom">
                     <n-select v-model:value="i.role" size="small" :options="roleOptions" :aria-label="i.name + ' 的身份'" />
                     <button class="sp-icon-button sp-delete" :disabled="previewActive" :aria-label="'删除角色 ' + i.name" @click="deletePc(index, i)"><n-icon :size="16"><icon-delete /></n-icon></button>

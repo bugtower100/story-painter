@@ -24,8 +24,8 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
     textColor2: isDark.value ? '#d9dbcd' : '#5b5e50',
     textColor3: isDark.value ? '#c0b0cc' : '#75647f',
     borderRadius: '8px',
-    fontSize: '16px',
-    fontSizeSmall: '14px',
+    fontSize: '14px',
+    fontSizeSmall: '13px',
     fontFamily: '"Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif',
   },
   Button: {

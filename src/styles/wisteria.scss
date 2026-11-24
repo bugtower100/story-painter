@@ -37,7 +37,8 @@ body { background: var(--sp-bg); }
   min-height: 100dvh;
   color: var(--sp-text);
   font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
+  line-height: 1.5;
   background: radial-gradient(ellipse at 75% 0, #bd97d133, transparent 42%), radial-gradient(ellipse at 100% 8%, #a3af7015, transparent 28%), var(--sp-bg);
   button, a, summary { -webkit-tap-highlight-color: transparent; }
   button { font: inherit; cursor: pointer; }
@@ -58,7 +59,7 @@ body { background: var(--sp-bg); }
 }
 .sp-brand { display: flex; gap: 12px; align-items: center; }
 .sp-brand-mark { width: 47px; height: 47px; color: var(--sp-primary); }
-.sp-brand strong { display: block; font-size: 20px; letter-spacing: .02em; font-weight: 650; line-height: 1.3; }
+.sp-brand strong { display: block; font-size: 18px; letter-spacing: .02em; font-weight: 650; line-height: 1.3; }
 .sp-brand div > span { display: block; font-size: 13px; letter-spacing: .12em; color: var(--sp-muted); margin-top: 4px; }
 .sp-version { color: var(--sp-primary); background: var(--sp-primary-soft); padding: 2px 7px; border-radius: 6px; font-size: 12px; align-self: flex-start; margin-top: 4px; }
 .sp-header-actions { display: flex; align-items: center; gap: 12px; }
@@ -67,19 +68,19 @@ body { background: var(--sp-bg); }
 .sp-icon-button svg { width: 20px; height: 20px; }
 .sp-icon-button:hover { color: var(--sp-primary); background: var(--sp-primary-soft); }
 .sp-page { max-width: 1480px; margin: auto; padding: 0 24px; }
-.sp-intro { min-height: 230px; display: flex; align-items: center; position: relative; padding: 32px 12px; isolation: isolate; }
+.sp-intro { min-height: 180px; display: flex; align-items: center; position: relative; padding: 24px 12px; isolation: isolate; }
 .sp-intro-copy { z-index: 1; }
 .sp-eyebrow { color: var(--sp-muted); font-size: 12px; letter-spacing: .2em; display: inline-flex; align-items: center; gap: 8px; }
 .sp-eyebrow i, .sp-status i { width: 5px; height: 5px; border-radius: 50%; background: var(--sp-accent); }
-.sp-intro h1 { color: var(--sp-text); border: 0; padding: 0; text-align: left; font-family: 'Noto Serif SC', 'Songti SC', 'SimSun', serif; font-size: clamp(25px, 2.6vw, 37px); letter-spacing: .04em; font-weight: 500; margin: 12px 0; }
+.sp-intro h1 { color: var(--sp-text); border: 0; padding: 0; text-align: left; font-family: 'Noto Serif SC', 'Songti SC', 'SimSun', serif; font-size: clamp(24px, 2.2vw, 30px); letter-spacing: .04em; font-weight: 500; margin: 12px 0; }
 .sp-intro em { color: var(--sp-primary); font-style: normal; }
 .sp-intro p { color: var(--sp-muted); font-size: 14px; letter-spacing: .04em; line-height: 1.9; }
 .sp-intro p span { margin-left: 10px; }
-.sp-intro-art { position: absolute; right: 27%; top: 32px; width: 165px; height: 165px; color: var(--sp-accent); opacity: .6; pointer-events: none; }
+.sp-intro-art { position: absolute; right: 27%; top: 20px; width: 140px; height: 140px; color: var(--sp-accent); opacity: .6; pointer-events: none; }
 .sp-intro-art > svg { width: 100%; transform: rotate(-10deg); }
 .sp-star { position: absolute; font-size: 16px; }
 .sp-star-one { right: -22px; top: 25px; }.sp-star-two { left: -10px; bottom: 25px; }.sp-star-three { right: -50px; bottom: 40px; font-size: 28px; }
-.sp-wisteria { position: absolute; right: 0; top: 0; width: 310px; height: 230px; overflow: hidden; pointer-events: none; opacity: .95; z-index: -1; mask-image: linear-gradient(to bottom, #000 75%, transparent); }
+.sp-wisteria { position: absolute; right: 0; top: 0; width: 310px; height: 180px; overflow: hidden; pointer-events: none; opacity: .95; z-index: -1; mask-image: linear-gradient(to bottom, #000 75%, transparent); }
 .sp-wisteria img { display: block; width: 100%; height: auto; max-width: none; }
 :root.dark .sp-wisteria { opacity: .82; }
 .sp-workspace { display: grid; grid-template-columns: 322px minmax(0, 1fr); gap: 22px; align-items: stretch; }
@@ -116,7 +117,6 @@ body { background: var(--sp-bg); }
 .sp-avatar { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; line-height: 1; border-radius: 11px; border: 1px solid color-mix(in srgb, var(--character-color) 35%, transparent); color: var(--character-color); background: color-mix(in srgb, var(--character-color) 10%, var(--sp-surface)); overflow: hidden; font-weight: 600; }
 .sp-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .sp-character-info { min-width: 0; }
-.sp-character-color .n-color-picker-trigger__value { display: none; }
 .sp-character-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; grid-column: 1 / -1; }
 .sp-character-bottom .n-select { width: 98px; }
 .sp-character-bottom .sp-text-button { font-size: 12px !important; }
@@ -142,7 +142,7 @@ body { background: var(--sp-bg); }
 .sp-sidebar > .sp-panel:last-child { margin-top: auto; }
 .sp-editor-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 22px 18px; }
 .sp-editor-heading .sp-eyebrow { font-size: 12px; letter-spacing: .14em; }
-.sp-editor-heading h2 { font-size: 20px; font-weight: 600; letter-spacing: .05em; margin-top: 5px; }
+.sp-editor-heading h2 { font-size: 18px; font-weight: 600; letter-spacing: .05em; margin-top: 5px; }
 .sp-status { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--sp-muted); }
 .sp-view-tabs { display: flex; gap: 4px; padding: 4px; margin: 0 16px 16px; border-radius: 10px; background: var(--sp-inset); overflow-x: auto; }
 .sp-view-tabs button { flex: 1; white-space: nowrap; background: transparent; border: 0; padding: 9px 12px; border-radius: 7px; color: var(--sp-muted); font-size: 14px; }
@@ -159,8 +159,8 @@ body { background: var(--sp-bg); }
 .sp-app .sp-editor-content {
   .codemirror { flex: 1; min-height: 0; height: 100%; overflow: hidden; border: 0; }
   .cm-editor { height: 100%; border: 0; box-shadow: none; }
-  .cm-editor { background: var(--sp-surface); color: var(--sp-text); font-size: 18px; }
-  .cm-scroller { font-family: 'Cascadia Code', Consolas, 'Microsoft YaHei', monospace; line-height: 1.9; }
+  .cm-editor { background: var(--sp-surface); color: var(--sp-text); font-size: 16px; }
+  .cm-scroller { font-family: 'Cascadia Code', Consolas, 'Microsoft YaHei', monospace; line-height: 1.75; }
   .cm-gutters { background: var(--sp-inset); color: var(--sp-muted); border-right: 1px solid var(--sp-border); }
   .cm-activeLine, .cm-activeLineGutter { background: var(--sp-primary-soft); }
   .cm-content { padding: 16px 0; caret-color: var(--sp-primary); }
