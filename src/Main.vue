@@ -1,159 +1,115 @@
 <template>
-  <n-layout>
-    <n-layout-header class="bg-slate-100 dark:bg-inherit">
-      <n-flex class="py-3 text-2xl" size="large" align="center" justify="center" wrap>
-        <n-flex align="center" justify="center">
-          <strong>海豹TRPG跑团Log着色器</strong>
-          <n-tag type="success" size="small" :bordered="false">v2.5.5</n-tag>
-        </n-flex>
-        <n-flex align="center" justify="center">
-          <n-icon>
-            <a href="https://github.com/sealdice/story-painter" target="_blank">
-              <logo-github/>
-            </a>
-          </n-icon>
-          <n-button type="primary" @click="backV1">官网</n-button>
-        </n-flex>
-      </n-flex>
-    </n-layout-header>
-    <n-layout-content class="bg-slate-100 dark:bg-inherit">
-      <div style="width: 1000px; margin: 0 auto; max-width: 100%; padding-bottom: 3rem">
-        <n-text type="info" italic class="block text-center my-1">SealDice骰QQ群 524364253 [群介绍中有其余3群]</n-text>
-        <option-view v-if="!showWorkbench"></option-view>
-        <n-spin :show="loading && !showWorkbench">
-          <template #description>
-            正在试图加载远程记录……
-          </template>
-          <div v-if="!showWorkbench">
-              <n-flex align="center" justify="center" class="mb-2" wrap>
-              <div class="pc-list">
-                <div v-for="(i, index) in store.pcList">
-                  <div style="display: flex; align-items: center; width: 30rem;">
-                    <n-button type="error" size="small" secondary style="padding: 0 1rem " @click="deletePc(index, i)"
-                              :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewTRG">
-                      <template #icon>
-                        <n-icon>
-                          <icon-delete></icon-delete>
-                        </n-icon>
-                      </template>
-                      <span v-if="notMobile">删除</span>
-                    </n-button>
-    
-                    <n-tooltip v-if="nameHasParen(i.name)" placement="top">
-                      <template #trigger>
-                        <n-icon size="18" style="margin: 0 6px 0 8px; color: #f59e0b;">
-                          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" />
-                            <path d="M16 9v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                            <circle cx="16" cy="23" r="1.6" fill="currentColor" />
-                          </svg>
-                        </n-icon>
-                      </template>
-                      名字含括号，可能导致染色失败
-                    </n-tooltip>
-                    <n-input :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewTRG" v-model:value="i.name"
-                             class="w-50 m-2"
-                             :prefix-icon="User" @focus="nameFocus(i)" @change="nameChanged(i)"/>
-    
-                    <n-input :disabled="true" v-model:value="i.IMUserId" style="width: 24rem"/>
-    
-                    <n-select v-model:value="i.role" class="m-2 w-60" style="width: 24rem"
-                              :options="[{value: '主持人', label: '主持人'}, {value: '角色', label: '角色'}, {value: '骰子', label: '骰子'}, {value: '隐藏', label: '隐藏'}]"/>
-    
-                    <n-color-picker v-model:value="i.color" :show-alpha="false" show-preview
-                                    :swatches="colors"
-                                    :on-update:value="(v) => colorChanged(v, i)"/>
-    
-                    <n-button size="small" :disabled="isShowPreview || isShowPreviewBBS || isShowPreviewTRG" @click="() => avatarInputs[index]?.click()" style="margin-left: 12px">上传头像</n-button>
-                    <input :ref="
-                    el => avatarInputs[index] = el as HTMLInputElement
-                    " type="file" accept="image/*" style="display:none" @change="(e) => onAvatarFileChange(e, i)" />
-                  </div>
-                </div>
-              </div>
-              <div style="max-width: 13em; margin-left: 1rem;">
-                <n-text type="warning" class="block leading-relaxed">
-                  提醒：名字中带括号可能导致log条目染色失败，请及时更改名字。从外部输入的log请提前修改名字，否则无法读取带括号的名字的条目。
-                </n-text>
-              </div>
-            </n-flex>
-          </div>
-
-          <n-flex v-if="!showWorkbench" size="small" justify="center" align="center" class="my-4" vertical>
-            <n-flex size="small" justify="center" align="center" class="mb-2">
-              <n-button secondary type="primary" @click="exportRecordRaw">下载原始文件</n-button>
-              <n-button secondary type="primary" @click="exportRecordDOC">下载Word</n-button>
-              <n-button secondary type="primary" @click="exportRecordTalkDOC">下载对话Word</n-button>
-            </n-flex>
-            <n-flex size="small" justify="center" align="center">
-              <n-button secondary type="primary" @click="exportRecordHTMLSingle">下载HTML(单文件)</n-button>
-              <n-button secondary type="primary" @click="exportRecordHTMLZip">下载HTML(ZIP)</n-button>
-              <n-button type="primary" secondary @click="() => ccfInput?.click()">导入ccf的log文件</n-button>
-              <n-button type="default" @click="openWorkbenchFromButton">打开工作台</n-button>
-              <n-radio-group v-model:value="editorMode" size="small">
-                <n-radio-button value="text">文本模式</n-radio-button>
-                <n-radio-button value="list">列表模式</n-radio-button>
-              </n-radio-group>
-            </n-flex>
-            <!-- <n-button @click="showPreview">预览</n-button> -->
-            <div>
-              <n-checkbox label="预览（无头像）" v-model:checked="isShowPreview" :border="true"
-                          @click="previewClick('preview')"/>
-              <n-checkbox label="论坛代码" v-model:checked="isShowPreviewBBS" :border="true"
-                          @click="previewClick('bbs')"/>
-              <n-checkbox label="回声工坊" v-model:checked="isShowPreviewTRG" :border="true"
-                          @click="previewClick('trg')"/>
-              <n-checkbox label="头像预览（含差分）" v-model:checked="isShowPreviewWithAvatar" :border="true" @click="previewClick('avatar')"/>
-            </div>
-            <n-divider vertical/>
-            <div>
-              <n-tooltip class="box-item" placement="top-start">
-                <template #trigger>
-                  <n-button type="primary" text @click="refreshColors">刷新色板</n-button>
-                </template>
-                重新随机生成上方颜色选择中的预置颜色
-              </n-tooltip>
-            </div>
-            <input :ref="setCcfInputRef" type="file" accept=".html,text/html" style="display:none" @change="onCcfFileChange" />
-          </n-flex>
-
-          <code-mirror v-if="!showWorkbench" v-show="!(isShowPreview || isShowPreviewBBS || isShowPreviewTRG || isShowPreviewWithAvatar) && editorMode === 'text'" ref="editor"
-                       class="mt-4"
-                       @change="onChange">
-            <div class="z-50 absolute right-2 flex flex-col items-center">
-              <div class="">
-                <n-button secondary @click="clearText" id="btnCopyPreviewBBS" type="primary" class="w-full">清空内容
-                </n-button>
-              </div>
-              <div class="mt-1">
-                <n-button secondary @click="doFlush" type="primary" class="w-full">强制刷新</n-button>
-              </div>
-              <div class="mt-1">
-                <n-checkbox label="编辑器染色" v-model:checked="store.doEditorHighlight" :border="false" class="w-full"
-                            @click.native="doEditorHighlightClick($event)"/>
-              </div>
-            </div>
-          </code-mirror>
-
-          <log-list-editor 
-              v-if="!showWorkbench && editorMode === 'list' && !(isShowPreview || isShowPreviewBBS || isShowPreviewTRG || isShowPreviewWithAvatar)" 
-              :initial-content="editorText"
-              @update:content="onListEditorUpdate" 
-              class="mt-4"
-          />
-
-          <n-message-provider v-if="!showWorkbench">
-            <preview-main-noavatar :is-show="isShowPreview" :preview-items="previewItems"></preview-main-noavatar>
-            <preview-bbs :is-show="isShowPreviewBBS" :preview-items="previewItems"></preview-bbs>
-            <preview-trg :is-show="isShowPreviewTRG" :preview-items="previewItems"></preview-trg>
-            <preview-bubble :is-show="isShowPreviewWithAvatar" :preview-items="previewItems"></preview-bubble>
-          </n-message-provider>
-        </n-spin>
-        <ccfolia-workbench v-if="showWorkbench" @close="showWorkbench = false" />
+  <div class="sp-app">
+    <a class="sp-skip" href="#story-editor">跳到日志编辑区</a>
+    <header class="sp-header">
+      <div class="sp-brand">
+        <OrbitMark class="sp-brand-mark" />
+        <div><strong>Story Painter <small>/ pry</small></strong><span>紫藤星环 · 跑团日志着色器</span></div>
+        <span class="sp-version">v2.5.5</span>
       </div>
-    </n-layout-content>
-  </n-layout>
+      <nav class="sp-header-actions" aria-label="站点导航">
+        <a href="https://github.com/bugtower100/story-painter" target="_blank" rel="noopener noreferrer" aria-label="GitHub 源码" class="sp-icon-button"><n-icon :size="20"><logo-github /></n-icon></a>
+        <button class="sp-icon-button" :aria-label="isDark ? '切换浅色模式' : '切换深色模式'" :title="isDark ? '切换浅色模式' : '切换深色模式'" @click="toggleDark()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path v-if="!isDark" d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/><g v-else><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></g></svg>
+        </button>
+        <a class="sp-header-link" href="https://dice.weizaima.com" target="_blank" rel="noopener noreferrer">海豹官网 ↗</a>
+      </nav>
+    </header>
+
+    <main class="sp-page">
+      <section class="sp-intro" aria-labelledby="page-title">
+        <div class="sp-intro-copy">
+          <span class="sp-eyebrow"><i></i> WISTERIA ORBIT</span>
+          <h1 id="page-title">跑团log染色器-pry改版</h1>
+          <p>导入日志 · 角色染色 · 编辑预览 · 多格式导出</p>
+        </div>
+        <div class="sp-intro-art" aria-hidden="true"><OrbitMark /><span class="sp-star sp-star-one">✦</span><span class="sp-star sp-star-two">✧</span><span class="sp-star sp-star-three">·</span></div>
+        <WisteriaDecoration />
+      </section>
+
+      <div v-show="!showWorkbench" class="sp-workspace">
+        <aside class="sp-sidebar" aria-label="日志设置">
+          <details class="sp-panel" open>
+            <summary class="sp-section-heading"><span><span class="sp-section-number">01</span>角色与配色</span><span class="sp-count">{{ store.pcList.length }} 位角色</span></summary>
+            <div class="sp-panel-body">
+              <div class="sp-section-note"><span>让每个声音都有自己的颜色</span><button class="sp-text-button" @click="refreshColors">刷新色板 ↻</button></div>
+              <div class="sp-character-list">
+                <div v-for="(i, index) in store.pcList" :key="i.IMUserId + ':' + index" class="sp-character">
+                  <button class="sp-avatar" :style="{ '--character-color': i.color }" :aria-label="'上传 ' + i.name + ' 的头像'" :disabled="previewActive" @click="avatarInputs[index]?.click()">
+                    <img v-if="i.avatar" :src="i.avatar" alt="" /><span v-else>{{ i.name.slice(0, 1) }}</span>
+                  </button>
+                  <div class="sp-character-info">
+                    <n-input v-model:value="i.name" :disabled="previewActive" :input-props="{ 'aria-label': '角色名称' }" size="small" @focus="nameFocus(i)" @change="nameChanged(i)" />
+                    <span class="sp-character-id" :title="i.IMUserId">{{ i.IMUserId }}</span>
+                  </div>
+                  <n-color-picker v-model:value="i.color" class="sp-character-color" :show-alpha="false" :swatches="colors" :on-update:value="(v) => colorChanged(v, i)" :aria-label="i.name + ' 的颜色'" />
+                  <div class="sp-character-bottom">
+                    <n-select v-model:value="i.role" size="small" :options="roleOptions" :aria-label="i.name + ' 的身份'" />
+                    <button class="sp-text-button" :disabled="previewActive" @click="avatarInputs[index]?.click()">上传头像</button>
+                    <button class="sp-icon-button sp-delete" :disabled="previewActive" :aria-label="'删除角色 ' + i.name" @click="deletePc(index, i)"><n-icon :size="16"><icon-delete /></n-icon></button>
+                  </div>
+                  <input :ref="el => avatarInputs[index] = el as HTMLInputElement" type="file" accept="image/*" hidden @change="(e) => onAvatarFileChange(e, i)" />
+                </div>
+                <p v-if="!store.pcList.length" class="sp-empty">导入或粘贴日志后，角色会出现在这里。</p>
+              </div>
+              <button class="sp-workbench-link" @click="openWorkbenchFromButton"><span>头像与差分工作台<small>角色表情 · 背景 · 气泡 · 导出样式</small></span><span aria-hidden="true">↗</span></button>
+            </div>
+          </details>
+
+          <details class="sp-panel" open>
+            <summary class="sp-section-heading"><span><span class="sp-section-number">02</span>过滤与排版</span><span class="sp-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="sp-panel-body"><option-view /></div>
+          </details>
+
+          <details class="sp-panel" open>
+            <summary class="sp-section-heading"><span><span class="sp-section-number">03</span>导出故事</span><span class="sp-chevron" aria-hidden="true">⌄</span></summary>
+            <div class="sp-panel-body sp-export-actions" @click.capture="flushListChanges">
+              <button class="sp-button sp-button-primary" @click="exportRecordHTMLSingle"><span>导出 HTML 单文件</span><span class="sp-button-icon" aria-hidden="true">↗</span></button>
+              <div class="sp-export-grid">
+                <button class="sp-button" @click="exportRecordHTMLZip">HTML 资源包</button>
+                <button class="sp-button" @click="exportRecordRaw">原始日志</button>
+                <button class="sp-button" @click="exportRecordDOC">Word 文档</button>
+                <button class="sp-button" @click="exportRecordTalkDOC">对话 Word</button>
+              </div>
+              <p class="sp-hint">头像、差分与背景随 HTML 一起珍藏。</p>
+            </div>
+          </details>
+        </aside>
+
+        <section id="story-editor" class="sp-editor-panel sp-panel" aria-labelledby="editor-title" tabindex="-1">
+          <div class="sp-editor-heading"><div><span class="sp-eyebrow">YOUR STORY, IN COLOR</span><h2 id="editor-title">故事编辑室</h2></div><span class="sp-status"><i></i>{{ loading ? '正在载入日志' : '准备就绪' }}</span></div>
+          <div class="sp-view-tabs" role="group" aria-label="日志视图">
+            <button v-for="view in views" :key="view.id" :aria-pressed="activeView === view.id" :class="{ 'is-active': activeView === view.id }" @click="setView(view.id)">{{ view.label }}</button>
+          </div>
+          <div class="sp-editor-toolbar">
+            <div class="sp-toolbar-actions">
+              <button class="sp-button sp-button-small" @click="ccfInput?.click()"><span aria-hidden="true">↥</span> 导入日志</button>
+              <button class="sp-text-button" @click="clearText">清空</button>
+              <button class="sp-text-button" @click="doFlush">刷新</button>
+            </div>
+            <n-checkbox v-model:checked="store.doEditorHighlight" @click="doEditorHighlightClick($event)">编辑器染色</n-checkbox>
+            <input :ref="setCcfInputRef" type="file" accept=".txt,.log,.json,.html,text/plain,text/html,application/json" hidden @change="onCcfFileChange" />
+          </div>
+          <n-spin :show="loading">
+            <template #description>正在载入远程日志……</template>
+            <div class="sp-editor-content">
+              <code-mirror v-show="!previewActive && editorMode === 'text'" ref="editor" @change="onChange" />
+              <log-list-editor v-if="listVisited" v-show="editorMode === 'list' && !previewActive" ref="listEditor" :initial-content="editorText" :active="editorMode === 'list' && !previewActive && !showWorkbench" :source-name="sourceName" :document-version="documentVersion" @update:content="onListEditorUpdate" />
+              <preview-main-noavatar :is-show="isShowPreview" :preview-items="previewItems" />
+              <preview-bbs :is-show="isShowPreviewBBS" :preview-items="previewItems" />
+              <preview-trg :is-show="isShowPreviewTRG" :preview-items="previewItems" />
+              <preview-bubble :is-show="isShowPreviewWithAvatar" :preview-items="previewItems" />
+            </div>
+          </n-spin>
+          <div class="sp-editor-footer"><span>{{ store.pcList.length }} 位角色<span class="sp-footer-dot">·</span>{{ editorText.length.toLocaleString() }} 字符</span><span>支持海豹、QQ、CCF 等日志</span></div>
+        </section>
+      </div>
+      <section v-if="showWorkbench" class="sp-workbench sp-panel"><ccfolia-workbench @close="closeWorkbench" /></section>
+      <footer class="sp-footer"><span>✦ 跑团log染色器-pry改版</span><span>Story Painter · 紫藤星环</span></footer>
+    </main>
+  </div>
 </template>
+
 
 <script setup lang="ts">
 import { nextTick, ref, onMounted, watch, h, render, renderList, computed } from "vue";
@@ -180,9 +136,9 @@ import PreviewTableTRNoavatar from './components/previews/preview-table-tr-noava
 import { LogItem, CharItem, packNameId } from "./logManager/types";
 import { setCharInfo } from './logManager/importers/_logImpoter'
 import { applyQQImageRKeyReplacement, shouldApplyQQImageRKeyReplacement, msgCommandFormat, msgImageFormat, msgIMUseridFormat, msgOffTopicFormat, msgAtFormat } from "./utils";
-import { NButton, NText, useMessage, useModal, useNotification, NRadioGroup, NRadioButton } from "naive-ui";
-import { User, LogoGithub, Delete as IconDelete } from '@vicons/carbon'
-import { breakpointsTailwind, useBreakpoints, useDark, useToggle } from '@vueuse/core'
+import { NButton, NText, useMessage, useModal, useNotification } from "naive-ui";
+import { LogoGithub, Delete as IconDelete } from '@vicons/carbon'
+import { useDark, useToggle } from '@vueuse/core'
 import OptionView from "./components/OptionView.vue";
 import randomColor from "randomcolor";
 
@@ -190,11 +146,42 @@ import { parquetReadObjects } from 'hyparquet'
 import { asyncBufferFrom } from 'hyperparam'
 import { compressors } from 'hyparquet-compressors'
 import CcfoliaWorkbench from './pages/CcfoliaWorkbench.vue'
+import OrbitMark from './components/OrbitMark.vue'
+import WisteriaDecoration from './components/WisteriaDecoration.vue'
 import LogListEditor from './pages/LogListEditor.vue'
+
+const listEditor = ref<InstanceType<typeof LogListEditor> | null>(null)
+const listVisited = ref(false)
+const sourceName = ref('当前日志')
+const documentVersion = ref(0)
+let syncingList = false
+const flushListChanges = () => listEditor.value?.flushPendingChanges()
+const roleOptions = ['主持人', '角色', '骰子', '隐藏'].map(role => ({ value: role, label: role }))
+const views = [
+  { id: 'text', label: '文本编辑' }, { id: 'list', label: '列表编辑' },
+  { id: 'preview', label: '阅读预览' }, { id: 'avatar', label: '头像与差分' },
+  { id: 'bbs', label: '论坛代码' }, { id: 'trg', label: '回声工坊' },
+] as const
+type StoryView = typeof views[number]['id']
+const previewActive = computed(() => isShowPreview.value || isShowPreviewBBS.value || isShowPreviewTRG.value || isShowPreviewWithAvatar.value)
+const activeView = computed<StoryView>(() => isShowPreview.value ? 'preview' : isShowPreviewBBS.value ? 'bbs' : isShowPreviewTRG.value ? 'trg' : isShowPreviewWithAvatar.value ? 'avatar' : editorMode.value)
+const setView = (view: StoryView) => {
+  flushListChanges()
+  if (view === 'list') listVisited.value = true
+  isShowPreview.value = view === 'preview'
+  isShowPreviewBBS.value = view === 'bbs'
+  isShowPreviewTRG.value = view === 'trg'
+  isShowPreviewWithAvatar.value = view === 'avatar'
+  if (view === 'text' || view === 'list') editorMode.value = view
+  else {
+    if (view === 'bbs' || view === 'trg') store.exportOptions.imageHide = true
+    showPreview()
+  }
+}
 
 const showWorkbench = ref(false)
 const editorMode = ref<'text' | 'list'>('text')
-const openWorkbench = () => { showWorkbench.value = true }
+const openWorkbench = () => { flushListChanges(); showWorkbench.value = true }
 const closeWorkbench = () => { showWorkbench.value = false }
 const openWorkbenchFromButton = () => {
   openWorkbench()
@@ -241,11 +228,6 @@ const containerStyle = computed(() => {
    }
    return style
 })
-
-const breakpoints = useBreakpoints(breakpointsTailwind)
-const notMobile = breakpoints.greater('sm')
-
-const nameHasParen = (name: string) => /[()（）]/.test(name || '')
 
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
@@ -304,56 +286,29 @@ async function onCcfFileChange(e: Event) {
   const file = input.files && input.files[0]
   if (!file) return
   const text = await file.text()
-  console.log(text)
+  setView('text')
+  sourceName.value = file.name
+  documentVersion.value++
   store.pcList.length = 0
   logMan.lastText = ''
   logMan.syncChange(text, [0, store.editor.state.doc.length], [0, text.length])
   input.value = ''
 }
 
-const backV1 = () => {
-  // location.href = location.origin + '/v1/' + location.search + location.hash;
-  location.href = 'https://dice.weizaima.com';
-}
-
 // 清空文本
 const clearText = () => {
+  setView('text')
+  sourceName.value = '当前日志'
+  documentVersion.value++
   store.editor.dispatch({
     changes: { from: 0, to: store.editor.state.doc.length, insert: '' }
   })
 }
 
 const doFlush = () => {
+  flushListChanges()
   console.log('flush')
   logMan.flush();
-}
-
-const previewClick = (mode: 'preview' | 'bbs' | 'trg' | 'avatar') => {
-  switch (mode) {
-    case 'preview':
-      isShowPreviewBBS.value = false
-      isShowPreviewTRG.value = false
-      isShowPreviewWithAvatar.value = false
-      break;
-    case 'bbs':
-      isShowPreview.value = false
-      isShowPreviewTRG.value = false
-      isShowPreviewWithAvatar.value = false
-      store.exportOptions.imageHide = true
-      break;
-    case 'trg':
-      isShowPreview.value = false
-      isShowPreviewBBS.value = false
-      isShowPreviewWithAvatar.value = false
-      store.exportOptions.imageHide = true
-      break;
-    case 'avatar':
-      isShowPreview.value = false
-      isShowPreviewBBS.value = false
-      isShowPreviewTRG.value = false
-      break;
-  }
-  showPreview();
 }
 
 function setupUA() {
@@ -854,7 +809,7 @@ const onChange = (v: ViewUpdate) => {
           const r2 = [ranges[i].fromB, ranges[i].toB];
 
           console.log('XXX', v, r1, r2);
-          if (r1[0] === 0 && r1[1] === logMan.lastText.length) {
+          if (!syncingList && r1[0] === 0 && r1[1] === logMan.lastText.length) {
             console.log('全部文本被删除，清除pc列表');
             store.pcList = [];
           }
@@ -948,9 +903,12 @@ const code = ref("")
 const onListEditorUpdate = (text: string) => {
   editorText.value = text || ''
   if (store.editor) {
-    store.editor.dispatch({
-      changes: { from: 0, to: store.editor.state.doc.length, insert: text }
-    })
+    syncingList = true
+    try {
+      store.editor.dispatch({
+        changes: { from: 0, to: store.editor.state.doc.length, insert: text }
+      })
+    } finally { syncingList = false }
   }
 }
 

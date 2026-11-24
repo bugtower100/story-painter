@@ -37,7 +37,8 @@ export class EditLogExporter extends LogExporter {
       }
       const expTag = i.expressionTag ? `#${i.expressionTag}` : ''
 
-      const channel = (i as any).commandInfo?.channel ? ` [${(i as any).commandInfo.channel}]` : ''
+      const groupName = i.groupName || i.commandInfo?.channel
+      const channel = groupName ? ` [${groupName}]` : ''
       text += `${i.nickname}${imuid}${expTag} ${timeText}${channel}${idSuffix}\n`
       index = indexOffset + textAll.length + text.length
       let indexContent = index

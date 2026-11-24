@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 
 import "~/styles/index.scss";
+import "~/styles/wisteria.scss";
 import './str.polyfill.ts'
 // import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 

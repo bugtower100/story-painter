@@ -1,176 +1,67 @@
 <template>
-  <div class="log-entry" :class="{ 'is-drag-over': isDragOver }" :style="itemStyle" :id="'log-item-' + index" @dragenter.prevent="onDragEnter" @dragleave="onDragLeave" @dragover.prevent="onDragOver" @drop.prevent="onDrop">
-      <n-flex align="center" class="mb-1">
-          <span class="drag-handle" draggable="true" @dragstart="onDragStart" @dragend="onDragEnd">
-            <n-icon size="18" style="color: #9ca3af;">
-              <svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M7 4a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 7 4Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 7 10Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 7 16Zm8-12a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 15 4Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 15 10Zm0 6a1.25 1.25 0 1 1-2.5 0A1.25 1.25 0 0 1 15 16Z"/>
-              </svg>
-            </n-icon>
-          </span>
-          <n-checkbox v-model:checked="source._selected" />
-          <n-text class="font-bold text-purple-700">{{ source.nameAndId }}</n-text>
-          <n-input v-model:value="source.diffName" placeholder="差分" size="tiny" style="width: 80px" @change="onChange" />
-          <n-text>(</n-text>
-          <n-input v-model:value="source.groupName" placeholder="组名" size="tiny" style="width: 80px" @change="onChange" />
-          <n-text>)</n-text>
-          <n-text class="text-gray-400 text-xs ml-auto">{{ source.dateTimeStr }}</n-text>
-          <n-button size="tiny" secondary type="info" @click="toggleEdit">{{ source._editing ? '完成' : '编辑' }}</n-button>
-          <n-button size="tiny" type="error" @click="onDelete(index)">删除</n-button>
-      </n-flex>
-      
-      <!-- Content Area -->
-      <div v-if="source._editing">
-         <n-input type="textarea" v-model:value="source.contentStr" :autosize="{ minRows: 2 }" @update:value="onContentUpdate" @blur="source._editing = false" autofocus />
-      </div>
-      <div v-else class="log-content-preview" @dblclick="toggleEdit">
-         {{ source.contentStr }}
-      </div>
-      
-      <!-- Insert Divider -->
-      <div class="insert-divider" @click="onInsert(index + 1)">
-          <div class="insert-btn-small">+ 插入条目</div>
-      </div>
-  </div>
+  <article class="log-entry" :class="{ 'is-selected': selectedIds.includes(source.id), 'is-drag-over': dragOver, 'is-search-hit': highlightedId === source.id }"
+    :data-entry-id="source.id" :style="{ '--window-color': getColor(source.window) }"
+    @dragover.prevent.stop="dragOver = true" @dragleave="dragOver = false" @drop.prevent.stop="drop">
+    <header class="log-entry-head">
+      <button class="drag-handle" draggable="true" aria-label="拖动发言" @dragstart="startDrag" @dragend="dragOver = false">⠿</button>
+      <input type="checkbox" :checked="selectedIds.includes(source.id)" :aria-label="'选择 ' + source.name + ' 的发言'" @change="onSelect(source.id, ($event.target as HTMLInputElement).checked)" />
+      <strong>{{ source.name }}<small v-if="source.account">({{ source.account }})</small></strong>
+      <time>{{ source.time }}</time>
+    </header>
+    <div class="log-entry-labels"><span class="source-label" :title="source.source">来源：{{ source.source }}</span><span>{{ source.window }}<template v-if="source.scene"> / {{ source.scene }}</template></span><span v-if="source.expression">#{{ source.expression }}</span></div>
+    <textarea v-if="editing" ref="textArea" class="log-entry-textarea" :value="source.text" aria-label="发言正文" rows="4" @input="onEdit(source.id, { text: ($event.target as HTMLTextAreaElement).value }, true)" @blur="onFinishEdit" @keydown.stop />
+    <div v-else class="log-content-preview" @dblclick="beginEdit">{{ source.text || '（空发言）' }}</div>
+    <div v-if="editing" class="log-entry-expression"><label>差分 <input :value="source.expression" placeholder="差分" @change="onEdit(source.id, { expression: ($event.target as HTMLInputElement).value.trim() })" /></label></div>
+    <footer class="log-entry-actions">
+      <button @click="editing ? finishEdit() : beginEdit()">{{ editing ? '完成' : '编辑' }}</button>
+      <button @click="onSplit(source.id)">拆分段落</button>
+      <button @click="onInsert(source.id)">插入</button>
+      <span class="log-action-spacer"></span>
+      <button :aria-label="'上移 ' + source.name + ' 的发言'" @click="onStep(source.id, -1)">↑</button>
+      <button :aria-label="'下移 ' + source.name + ' 的发言'" @click="onStep(source.id, 1)">↓</button>
+      <button @click="onDelete(source.id)">删除</button>
+    </footer>
+  </article>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { NFlex, NCheckbox, NText, NInput, NButton, NIcon } from 'naive-ui'
-
+import { nextTick, ref } from 'vue'
+import type { WorkspaceEntry } from '../editor/listWorkspace'
 const props = defineProps<{
-  source: any
+  source: WorkspaceEntry
   index: number
-  getColor: (key: string) => string
-  onDelete: (index: number) => void
-  onInsert: (index: number) => void
-  onChange: () => void
-  onMove: (dragId: string, targetId: string, placeAfter: boolean) => void
+  selectedIds: string[]
+  highlightedId: string
+  getColor: (window: string) => string
+  onSelect: (id: string, checked: boolean) => void
+  onEdit: (id: string, patch: Partial<WorkspaceEntry>, typing?: boolean) => void
+  onFinishEdit: () => void
+  onDelete: (id: string) => void
+  onInsert: (id: string) => void
+  onSplit: (id: string) => void
+  onStep: (id: string, direction: number) => void
+  onMove: (ids: string[], window: string, target: string, after: boolean) => void
 }>()
-
-const itemStyle = computed(() => {
-   const key = String(props.source.groupName || 'main').trim() || 'main'
-   return {
-      borderLeft: `4px solid ${props.getColor(key)}`
-   }
-})
-
-const toggleEdit = () => {
-   props.source._editing = !props.source._editing
+const editing = ref(false)
+const textArea = ref<HTMLTextAreaElement>()
+const dragOver = ref(false)
+const beginEdit = () => { editing.value = true; nextTick(() => textArea.value?.focus()) }
+const finishEdit = () => { editing.value = false; props.onFinishEdit() }
+const startDrag = (event: DragEvent) => {
+  if (!event.dataTransfer) return
+  event.dataTransfer.effectAllowed = 'move'
+  const ids = props.selectedIds.includes(props.source.id) ? props.selectedIds : [props.source.id]
+  event.dataTransfer.setData('application/x-story-painter-entries', JSON.stringify(ids))
 }
-
-const onContentUpdate = (val: string) => {
-   props.source.content = val.split('\n')
-   props.onChange()
-}
-
-const isDragOver = ref(false)
-
-const onDragStart = (e: DragEvent) => {
-  if (!e.dataTransfer) return
-  e.dataTransfer.effectAllowed = 'move'
-  e.dataTransfer.setData('text/plain', String(props.source._id))
-}
-
-const onDragEnd = () => {
-  isDragOver.value = false
-}
-
-const onDragEnter = () => {
-  isDragOver.value = true
-}
-
-const onDragLeave = (e: DragEvent) => {
-  const cur = e.currentTarget as HTMLElement | null
-  const rel = e.relatedTarget as Node | null
-  if (cur && rel && cur.contains(rel)) return
-  isDragOver.value = false
-}
-
-const onDragOver = () => {
-  isDragOver.value = true
-}
-
-const onDrop = (e: DragEvent) => {
-  isDragOver.value = false
-  const dragId = e.dataTransfer?.getData('text/plain')
-  if (!dragId) return
-  const targetId = String(props.source._id)
-  if (dragId === targetId) return
-  const el = e.currentTarget as HTMLElement | null
-  if (!el) return
-  const rect = el.getBoundingClientRect()
-  const placeAfter = e.clientY - rect.top > rect.height / 2
-  props.onMove(String(dragId), targetId, placeAfter)
+const drop = (event: DragEvent) => {
+  dragOver.value = false
+  const data = event.dataTransfer?.getData('application/x-story-painter-entries')
+  if (!data) return
+  try {
+    const ids = JSON.parse(data)
+    if (!Array.isArray(ids) || !ids.every(id => typeof id === 'string')) return
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+    props.onMove(ids, props.source.window, props.source.id, event.clientY > rect.top + rect.height / 2)
+  } catch { /* Other applications can put non-JSON data on the drag clipboard. */ }
 }
 </script>
-
-<style scoped>
-.log-entry {
-   padding: 10px;
-   border-bottom: 1px solid #eee;
-   background: #fff;
-   position: relative;
-}
-.log-entry:hover {
-   background: #f9f9f9;
-}
-.log-entry.is-drag-over {
-   outline: 2px solid #c084fc;
-   outline-offset: -2px;
-   background: #faf5ff;
-}
-.drag-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 6px;
-  cursor: grab;
-  user-select: none;
-}
-.drag-handle:active {
-  cursor: grabbing;
-}
-.insert-divider {
-   height: 10px;
-   position: relative;
-   margin-top: 5px;
-   cursor: pointer;
-   opacity: 0;
-   transition: opacity 0.2s;
-}
-.insert-divider:hover {
-   opacity: 1;
-}
-.insert-divider::before {
-   content: '';
-   position: absolute;
-   top: 50%;
-   left: 0;
-   right: 0;
-   border-top: 1px dashed #d1c4e9;
-}
-.insert-btn-small {
-   position: absolute;
-   left: 50%;
-   top: 50%;
-   transform: translate(-50%, -50%);
-   background: #fff;
-   border: 1px solid #ce93d8;
-   color: #9c27b0;
-   font-size: 10px;
-   padding: 2px 8px;
-   border-radius: 10px;
-   z-index: 1;
-}
-.log-content-preview {
-   white-space: pre-wrap;
-   font-size: 14px;
-   color: #333;
-   cursor: text;
-   min-height: 24px;
-}
-.log-content-preview:hover {
-   background-color: #f0f8ff;
-}
-</style>
