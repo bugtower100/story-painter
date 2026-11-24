@@ -8,7 +8,7 @@
       <strong>{{ source.name }}<small v-if="source.account">({{ source.account }})</small></strong>
       <time>{{ source.time }}</time>
     </header>
-    <div class="log-entry-labels"><span class="source-label" :title="source.source">来源：{{ source.source }}</span><span>{{ source.window }}<template v-if="source.scene"> / {{ source.scene }}</template></span><span v-if="source.expression">#{{ source.expression }}</span></div>
+    <div class="log-entry-labels"><span class="source-label" :title="source.source">来源：{{ source.source }}</span><span>{{ source.window }}<template v-if="source.scene"> / {{ source.scene }}</template></span><span v-if="getBlockName(source.id)">块：{{ getBlockName(source.id) }}</span><span v-if="source.expression">#{{ source.expression }}</span></div>
     <textarea v-if="editing" ref="textArea" class="log-entry-textarea" :value="source.text" aria-label="发言正文" rows="4" @input="onEdit(source.id, { text: ($event.target as HTMLTextAreaElement).value }, true)" @blur="onFinishEdit" @keydown.stop />
     <div v-else class="log-content-preview" @dblclick="beginEdit">{{ source.text || '（空发言）' }}</div>
     <div v-if="editing" class="log-entry-expression"><label>差分 <input :value="source.expression" placeholder="差分" @change="onEdit(source.id, { expression: ($event.target as HTMLInputElement).value.trim() })" /></label></div>
@@ -33,6 +33,7 @@ const props = defineProps<{
   selectedIds: string[]
   highlightedId: string
   getColor: (window: string) => string
+  getBlockName: (id: string) => string | undefined
   onSelect: (id: string, checked: boolean) => void
   onEdit: (id: string, patch: Partial<WorkspaceEntry>, typing?: boolean) => void
   onFinishEdit: () => void
