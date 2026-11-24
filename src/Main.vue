@@ -89,13 +89,13 @@
           </div>
           <div class="sp-editor-toolbar">
             <div class="sp-toolbar-actions">
-              <div class="sp-import-entry"><button class="sp-button sp-import-button" @click="ccfInput?.click()"><span aria-hidden="true">↥</span> 选择文件导入日志</button><small>TXT / LOG / JSON / HTML / SealChat ZIP · 替换当前日志</small></div>
+              <div class="sp-import-entry"><button class="sp-button sp-import-button" @click="ccfInput?.click()"><span aria-hidden="true">↥</span> 选择文件导入日志</button><small>TXT / LOG / TRPGLOG / JSON / HTML / SealChat ZIP · 替换当前日志</small></div>
               <button class="sp-button sp-button-small" @click="openAppendImport">追加多个文件</button>
               <button class="sp-text-button" @click="clearText">清空</button>
               <button class="sp-text-button" @click="doFlush">刷新</button>
             </div>
             <n-checkbox v-model:checked="store.doEditorHighlight" @click="doEditorHighlightClick($event)">编辑器染色</n-checkbox>
-            <input :ref="setCcfInputRef" type="file" accept=".txt,.log,.json,.html,.zip,text/plain,text/html,application/json" hidden @change="onCcfFileChange" />
+            <input :ref="setCcfInputRef" type="file" accept=".txt,.log,.trpglog,.json,.html,.zip,text/plain,text/html,application/json" hidden @change="onCcfFileChange" />
           </div>
           <n-spin :show="loading" class="sp-editor-body">
             <template #description>正在载入远程日志……</template>
@@ -108,7 +108,7 @@
               <preview-bubble :is-show="isShowPreviewWithAvatar" :preview-items="previewItems" />
             </div>
           </n-spin>
-          <div class="sp-editor-footer"><span>{{ store.pcList.length }} 位角色<span class="sp-footer-dot">·</span>{{ editorText.length.toLocaleString() }} 字符</span><span>支持海豹、QQ、CCF 等日志</span></div>
+          <div class="sp-editor-footer"><span>{{ store.pcList.length }} 位角色<span class="sp-footer-dot">·</span>{{ editorText.length.toLocaleString() }} 字符</span><span>本地导入：海豹、青果、溯洄、QQ、CCF、SealChat</span></div>
         </section>
       </div>
       <section v-if="showWorkbench" class="sp-workbench sp-panel"><ccfolia-workbench :items="logMan.curItems" @close="closeWorkbench" /></section>

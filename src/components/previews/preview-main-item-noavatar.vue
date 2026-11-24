@@ -14,11 +14,12 @@ import { escapeHTML, getCanvasFontSize, getTextWidth, msgCommandFormat, msgImage
 
 const store = useStore();
 
-defineProps({
+const props = defineProps({
   source: {
     type: Object as () => LogItem,
     default: () => { },
   },
+  alignContinuation: { type: Boolean, default: true },
 });
 
 const colorByName = (i: LogItem) => {
@@ -81,7 +82,7 @@ const previewMessageSolve = (i: LogItem) => {
   }
 
   let length = 0;
-  if (store.exportOptions.textIndentFirst) {
+  if (props.alignContinuation && store.exportOptions.textIndentFirst) {
     if (canvasFontSize === '') {
       const el = document.getElementById('preview');
       if (el) {

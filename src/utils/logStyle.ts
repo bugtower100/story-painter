@@ -1,4 +1,5 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
+import { logStylePresets, sealChatStyleLicense } from './logStylePresets'
 
 // SealChat style-package v1 protocol (MIT):
 // https://github.com/kagangtuya-star/sealchat/blob/master/doc/log-layout-style-authoring.md
@@ -127,6 +128,7 @@ export function exportStyleZip(pkg: LogStylePackage): Uint8Array {
     'settings.schema.json': strToU8(JSON.stringify(settingsSchema || {})), 'styles/main.css': strToU8(css)
   }
   for (const [id, html] of Object.entries(templates)) files[`templates/${id}.html`] = strToU8(html)
+  if (logStylePresets.some(style => style.id === pkg.id)) files['LICENSE.txt'] = strToU8(sealChatStyleLicense)
   for (const asset of pkg.assets) files[asset.path] = Uint8Array.from(atob(assetData![asset.id].split(',')[1]), c => c.charCodeAt(0))
   return zipSync(files)
 }
@@ -145,6 +147,7 @@ export function safeImageUrl(value: string) {
 export function renderStyledLog(pkg: LogStylePackage, messages: StyledMessage[], title: string, baseCss: string): string {
   validateStyle(pkg)
   const doc = document.implementation.createHTMLDocument(title)
+  if (logStylePresets.some(style => style.id === pkg.id)) doc.head.append(doc.createComment(sealChatStyleLicense))
   const root = doc.documentElement
   root.lang = 'zh-CN'
   for (const [key, value] of Object.entries(pkg.tokens)) {
@@ -175,7 +178,9 @@ export function renderStyledLog(pkg: LogStylePackage, messages: StyledMessage[],
     fragment.querySelectorAll('[data-log-if]').forEach(el => { if (!fields[el.getAttribute('data-log-if')!]) el.remove() })
     fragment.querySelectorAll('[data-log-text]').forEach(el => { el.textContent = fields[el.getAttribute('data-log-text')!] || '' })
     fragment.querySelectorAll('[data-log-bind-src]').forEach(el => { const src = fields[el.getAttribute('data-log-bind-src')!]; if (src) el.setAttribute('src', src); else el.remove() })
-    fragment.querySelector('[data-log-slot="body"]')!.innerHTML = message.body
+    const body = fragment.querySelector('[data-log-slot="body"]')!
+    body.classList.add('log-body')
+    body.innerHTML = message.body
     const node = doc.createElement('section')
     node.className = 'log-node log-node--message'
     node.dataset.logType = message.messageType; node.dataset.logSpeaker = message.identityKey; node.dataset.logChannel = message.channel

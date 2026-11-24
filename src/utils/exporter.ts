@@ -37,7 +37,8 @@ async function customStyleHtml(results: LogItem[], embedAssets: boolean) {
   for (const item of results) {
     const pc = store.pcMap.get(packNameId(item))
     if (item.isRaw || pc?.role === '隐藏') continue
-    render(h(PreviewItemNoavatar, { source: item }), el)
+    // The HTML template owns its layout; text-view header indentation does not belong in its body.
+    render(h(PreviewItemNoavatar, { source: item, alignContinuation: false }), el)
     const body = el.querySelector('.list-item-dynamic > div')?.innerHTML || ''
     messages.push({ name: item.nickname, identityKey: item.IMUserId, variantKey: item.expressionTag,
       avatar: store.getAvatar(item), color: pc?.color || '#55445f', body,

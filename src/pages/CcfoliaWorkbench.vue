@@ -26,6 +26,9 @@
           <n-tab-pane name="style" tab="HTML 样式">
             <div class="wb-form">
               <n-checkbox v-model:checked="w.useCustomStyle" :disabled="!w.stylePackage">使用自定义样式导出</n-checkbox>
+              <label>默认 HTML 模板<select v-model="presetId" aria-label="默认 HTML 模板"><option v-for="preset in logStylePresets" :key="preset.id" :value="preset.id">{{ preset.name }}</option></select></label>
+              <n-button @click="loadPreset">载入所选模板</n-button>
+              <p class="wb-note">载入会替换下方编辑区。可直接点击「应用样式」查看效果，也可修改 HTML / CSS 后再应用。</p>
               <label class="wb-upload wb-import">导入 HTML / CSS / SealChat 样式包<input type="file" accept=".html,.htm,.css,.json,.zip" aria-label="导入自定义样式" @change="onStyleFile" /></label>
               <p class="wb-note">HTML 模板须有正文插槽；SealChat 样式支持 JSON 或包含资源的 ZIP。导入后可继续编辑。</p>
               <label>样式名称<input v-model="draft.name" /></label>
@@ -65,7 +68,7 @@
     <n-modal v-model:show="guide" preset="card" title="工作台使用说明" style="width:min(720px,92vw)"><div class="wb-guide">
       <p><strong>1. 导入日志。</strong>主界面支持 SealChat 标准 JSON、HTML 分片和完整 HTML ZIP 日志包。想保留头像差分，请在 SealChat 导出时包含图片，再导入 HTML 或 ZIP。JSON 没有头像和差分数据。</p>
       <p><strong>2. 管理差分。</strong>在「头像与差分」中按名字或 ID 查找角色，上传默认头像或差分图片。在列表编辑的差分栏填写标签，也可在文本头使用 <code>名字(ID)#微笑 时间</code>。SealChat HTML 没有保存原差分名称或编号，导入时按每条发言的头像生成 <code>sc-…</code> 标签；同一头像复用同一标签。</p>
-      <p><strong>3. 自定义样式。</strong>载入示例模板后修改 HTML 和 CSS，点击「应用样式」。<code>data-log-text="speaker.name"</code> 显示名字，<code>data-log-bind-src="speaker.avatarUrl"</code> 显示当前差分，<code>data-log-slot="body"</code> 插入正文；每个消息模板必须恰好有一个正文插槽。</p>
+      <p><strong>3. 自定义样式。</strong>在「默认 HTML 模板」中选择气泡、紧凑、小说或剧本，点击「载入所选模板」，再点击「应用样式」查看效果。也可修改 HTML 和 CSS 后再应用。<code>data-log-text="speaker.name"</code> 显示名字，<code>data-log-bind-src="speaker.avatarUrl"</code> 显示当前差分，<code>data-log-slot="body"</code> 插入正文；每个消息模板必须恰好有一个正文插槽。小说和剧本模板原本不显示头像，切换到气泡或紧凑即可查看差分。</p>
       <p><strong>4. 导入 SealChat 样式。</strong>支持消息模板、CSS、设计变量、模板片段和按消息类型／角色 ID／差分标签匹配的规则。含图片和字体的样式请导入完整 ZIP。SealChat 的分页、封面和工程元素不作为日志消息导入；HTML 头像快照无法还原原差分编号，引用原编号的规则需改成当前标签。</p>
       <p><strong>5. 保存与导出。</strong>设置和图片保存在当前浏览器；使用「下载样式包」可备份样式。HTML 与 ZIP 导出采用已应用的样式，TXT、论坛代码和 Word 保持各自格式。自定义 HTML 导出为静态阅读页；原有气泡页的窗口筛选保留在默认样式中。</p>
     </div></n-modal>
@@ -79,6 +82,7 @@ import { saveAs } from 'file-saver'
 import { useStore } from '~/store'
 import { characterAssetKey, type CharItem, type LogItem } from '~/logManager/types'
 import { exportStyleZip, importStyle, starterStyle, validateStyle, type LogStylePackage } from '~/utils/logStyle'
+import { logStylePresets } from '~/utils/logStylePresets'
 import { exportFileHtmlBubbleSingle, exportFileHtmlBubbleZip } from '~/utils/exporter'
 import { msgImageFormat, msgAtFormat, msgOffTopicFormat, msgCommandFormat, msgIMUseridFormat } from '~/utils'
 
@@ -115,6 +119,8 @@ function clampSettings() {
   for (const key of Object.keys(ranges) as (keyof typeof ranges)[]) { const [min, max, fallback] = ranges[key]; w[key] = typeof w[key] === 'number' ? Math.max(min, Math.min(max, w[key])) : fallback }
 }
 const draft = ref<LogStylePackage>(starterStyle()), templateId = ref('message'), tokenText = ref(''), ruleText = ref(''), styleError = ref('')
+const presetId = ref(logStylePresets[0].id)
+function loadPreset() { loadDraft(logStylePresets.find(preset => preset.id === presetId.value)!) }
 function loadDraft(pkg: LogStylePackage) { draft.value = JSON.parse(JSON.stringify(pkg)); templateId.value = Object.keys(pkg.templates)[0]; tokenText.value = JSON.stringify(pkg.tokens, null, 2); ruleText.value = JSON.stringify(pkg.rules, null, 2); styleError.value = '' }
 loadDraft(w.stylePackage || starterStyle())
 function checkedDraft() { return validateStyle({ ...draft.value, tokens: JSON.parse(tokenText.value), rules: JSON.parse(ruleText.value) }) }

@@ -6,8 +6,8 @@
       <button :disabled="!history.past.length" title="Ctrl / ⌘ Z" @click="undo">撤销</button><button :disabled="!history.future.length" title="Ctrl / ⌘ Shift Z" @click="redo">重做</button><button @click="openWindow()">＋ 新建窗口</button><button class="lw-guide-button" @click="showGuide = true">使用说明</button>
     </div>
     <details class="lw-import" @dragover.prevent @drop.prevent="dropFiles">
-      <summary>追加导入多个文件 <span>TXT / LOG / JSON / HTML / SealChat ZIP · 保留来源文件名</span></summary>
-      <input ref="fileInput" type="file" multiple accept=".txt,.log,.json,.html,.zip" aria-label="追加日志文件" @change="chooseFiles" />
+      <summary>追加导入多个文件 <span>TXT / LOG / TRPGLOG / JSON / HTML / SealChat ZIP · 保留来源文件名</span></summary>
+      <input ref="fileInput" type="file" multiple accept=".txt,.log,.trpglog,.json,.html,.zip" aria-label="追加日志文件" @change="chooseFiles" />
       <div v-for="(file, index) in files" :key="index" class="lw-file-row"><span>{{ file.name }}</span><label>导入窗口 <input v-model="fileWindows[index]" aria-label="导入窗口" /></label></div>
       <div v-if="files.length" class="lw-toolbar"><label><input v-model="importPending" type="checkbox" /> 先放入待分拣</label><label><input v-model="importByTime" type="checkbox" :disabled="!!state.blocks.length" /> 合并后按时间排序</label><button :disabled="processing" @click="importFiles">{{ processing ? '正在导入…' : '追加合并' }}</button><span v-if="state.blocks.length">已有内容块，追加记录将接在末尾，保留当前编排。</span></div>
     </details>
