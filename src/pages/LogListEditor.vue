@@ -88,7 +88,7 @@ const allSelected = computed(() => !!visibleEntries.value.length && visibleEntri
 const countWindow = (window: string) => state.value.entries.filter(e => e.window === window).length
 const scenes = (window: string) => [...new Set(state.value.entries.filter(e => e.window === window).map(e => e.scene))]
 const countScene = (window: string, scene: string) => state.value.entries.filter(e => e.window === window && e.scene === scene).length
-const colors = ['#a691af', '#a58bcc', '#78aaa9', '#c18c9f', '#b69c69', '#809bc4']
+const colors = ['#8b907e', '#ac8abc', '#98a76d', '#bd9299', '#b9a683', '#919ba3']
 const getColor = (window: string) => colors[Math.max(0, allWindows.value.indexOf(window)) % colors.length]
 let syncTimer: ReturnType<typeof setTimeout> | undefined
 let typing = false

@@ -25,11 +25,12 @@
 
 ### 外观定制
 
-- `src/styles/wisteria.scss`：浅色/深色配色变量、侧栏和主区布局、窄屏样式。
+- `src/styles/wisteria.scss`：以紫藤花瓣的紫色为主，浅色采用淡紫和暖白面板，深色采用紫灰面板，叶片绿用于少量点缀。桌面主编辑/预览面板与侧栏导出区底部对齐；编辑器为原版 18px，阅读预览为 16px。
 - `src/App.vue`：Naive UI 控件配色，与页面主题一致。
-- `src/components/OrbitMark.vue`、`WisteriaDecoration.vue`：本地 SVG 星环与紫藤装饰，不依赖外部图片。
+- `src/components/OrbitMark.vue`：本地 SVG 星环装饰。
+- `src/components/WisteriaDecoration.vue`、`public/wisteria-art-illustration-clipart.png`：用户提供的透明 PNG 原图，本地加载；仅通过 CSS 缩放与布局裁切，图片透明度和原始文件保持不变。素材来源记录在组件注释中，不显示在网页上。
 - `src/Main.vue`、`index.html`：页面文案与浏览器标题。
-- `src/sample.ts`：首次打开时的本地示例日志。
+- `src/sample.ts`：首次打开时使用海豹 Story Painter 原版默认示例，完整保留海豹一号机、木落和芝士雪豹的日志内容。
 
 开发与检查沿用 `pnpm install --frozen-lockfile`、`pnpm dev`、`pnpm test`、`pnpm build`。构建产物仍为 `dist`，沿用原部署方式。
 

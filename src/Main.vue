@@ -4,7 +4,7 @@
     <header class="sp-header">
       <div class="sp-brand">
         <OrbitMark class="sp-brand-mark" />
-        <div><strong>Story Painter <small>/ pry</small></strong><span>紫藤星环 · 跑团日志着色器</span></div>
+        <div><strong>Story Painter</strong></div>
         <span class="sp-version">v2.5.5</span>
       </div>
       <nav class="sp-header-actions" aria-label="站点导航">
@@ -19,7 +19,6 @@
     <main class="sp-page">
       <section class="sp-intro" aria-labelledby="page-title">
         <div class="sp-intro-copy">
-          <span class="sp-eyebrow"><i></i> WISTERIA ORBIT</span>
           <h1 id="page-title">跑团log染色器-pry改版</h1>
           <p>导入日志 · 角色染色 · 编辑预览 · 多格式导出</p>
         </div>
@@ -32,7 +31,7 @@
           <details class="sp-panel" open>
             <summary class="sp-section-heading"><span><span class="sp-section-number">01</span>角色与配色</span><span class="sp-count">{{ store.pcList.length }} 位角色</span></summary>
             <div class="sp-panel-body">
-              <div class="sp-section-note"><span>让每个声音都有自己的颜色</span><button class="sp-text-button" @click="refreshColors">刷新色板 ↻</button></div>
+              <div class="sp-section-note"><button class="sp-text-button" @click="refreshColors">刷新色板 ↻</button></div>
               <div class="sp-character-list">
                 <div v-for="(i, index) in store.pcList" :key="i.IMUserId + ':' + index" class="sp-character">
                   <button class="sp-avatar" :style="{ '--character-color': i.color }" :aria-label="'上传 ' + i.name + ' 的头像'" :disabled="previewActive" @click="avatarInputs[index]?.click()">
@@ -62,7 +61,7 @@
           </details>
 
           <details class="sp-panel" open>
-            <summary class="sp-section-heading"><span><span class="sp-section-number">03</span>导出故事</span><span class="sp-chevron" aria-hidden="true">⌄</span></summary>
+            <summary class="sp-section-heading"><span><span class="sp-section-number">03</span>导出log</span><span class="sp-chevron" aria-hidden="true">⌄</span></summary>
             <div class="sp-panel-body sp-export-actions" @click.capture="flushListChanges">
               <button class="sp-button sp-button-primary" @click="exportRecordHTMLSingle"><span>导出 HTML 单文件</span><span class="sp-button-icon" aria-hidden="true">↗</span></button>
               <div class="sp-export-grid">
@@ -71,13 +70,13 @@
                 <button class="sp-button" @click="exportRecordDOC">Word 文档</button>
                 <button class="sp-button" @click="exportRecordTalkDOC">对话 Word</button>
               </div>
-              <p class="sp-hint">头像、差分与背景随 HTML 一起珍藏。</p>
+              <p class="sp-hint">HTML 导出包含头像、差分和背景。</p>
             </div>
           </details>
         </aside>
 
         <section id="story-editor" class="sp-editor-panel sp-panel" aria-labelledby="editor-title" tabindex="-1">
-          <div class="sp-editor-heading"><div><span class="sp-eyebrow">YOUR STORY, IN COLOR</span><h2 id="editor-title">故事编辑室</h2></div><span class="sp-status"><i></i>{{ loading ? '正在载入日志' : '准备就绪' }}</span></div>
+          <div class="sp-editor-heading"><div><h2 id="editor-title">日志编辑与预览</h2></div><span class="sp-status"><i></i>{{ loading ? '正在载入日志' : '准备就绪' }}</span></div>
           <div class="sp-view-tabs" role="group" aria-label="日志视图">
             <button v-for="view in views" :key="view.id" :aria-pressed="activeView === view.id" :class="{ 'is-active': activeView === view.id }" @click="setView(view.id)">{{ view.label }}</button>
           </div>
@@ -90,7 +89,7 @@
             <n-checkbox v-model:checked="store.doEditorHighlight" @click="doEditorHighlightClick($event)">编辑器染色</n-checkbox>
             <input :ref="setCcfInputRef" type="file" accept=".txt,.log,.json,.html,text/plain,text/html,application/json" hidden @change="onCcfFileChange" />
           </div>
-          <n-spin :show="loading">
+          <n-spin :show="loading" class="sp-editor-body">
             <template #description>正在载入远程日志……</template>
             <div class="sp-editor-content">
               <code-mirror v-show="!previewActive && editorMode === 'text'" ref="editor" @change="onChange" />
@@ -105,7 +104,7 @@
         </section>
       </div>
       <section v-if="showWorkbench" class="sp-workbench sp-panel"><ccfolia-workbench @close="closeWorkbench" /></section>
-      <footer class="sp-footer"><span>✦ 跑团log染色器-pry改版</span><span>Story Painter · 紫藤星环</span></footer>
+      <footer class="sp-footer"><span>跑团log染色器-pry改版</span><span>Story Painter</span></footer>
     </main>
   </div>
 </template>

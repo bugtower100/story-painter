@@ -1,6 +1,6 @@
 .sp-log-workspace, .lw-dialog {
   color: var(--sp-text);
-  font-size: 12px;
+  font-size: 14px;
   button, input, select, textarea { font: inherit; }
   button, input:not([type=checkbox]):not([type=file]), select, textarea {
     border: 1px solid var(--sp-border); border-radius: 7px; padding: 6px 9px;
@@ -20,7 +20,7 @@
 .sp-log-workspace .lw-segment button[aria-pressed=true] { background: var(--sp-surface); box-shadow: var(--sp-shadow); }
 .lw-import { margin: 12px 0; border: 1px dashed var(--sp-border); border-radius: 10px; padding: 10px 12px; }
 .lw-import summary { cursor: pointer; color: var(--sp-primary); }
-.lw-import summary span { color: var(--sp-muted); margin-left: 8px; font-size: 10px; }
+.lw-import summary span { color: var(--sp-muted); margin-left: 8px; font-size: 12px; }
 .lw-import > input { display: block; margin-top: 12px; max-width: 100%; }
 .lw-file-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
 .lw-file-row > span { overflow-wrap: anywhere; }
@@ -29,49 +29,49 @@
 .lw-search > input { flex: 1 1 200px; }
 .lw-search > span { color: var(--sp-muted); font-variant-numeric: tabular-nums; min-width: 48px; text-align: center; }
 .lw-search select { max-width: 145px; }
-.lw-batch { padding: 9px; background: var(--sp-inset); border-radius: 9px; font-size: 11px; }
+.lw-batch { padding: 9px; background: var(--sp-inset); border-radius: 9px; font-size: 13px; }
 .lw-batch > span { color: var(--sp-muted); }
 .sp-log-workspace .lw-batch button, .sp-log-workspace .lw-batch select { padding: 4px 7px; }
-.sp-log-workspace .lw-help { color: var(--sp-muted); line-height: 1.8; font-size: 11px; margin: 10px 0; }
+.sp-log-workspace .lw-help { color: var(--sp-muted); line-height: 1.8; font-size: 13px; margin: 10px 0; }
 .lw-list-layout { display: grid; grid-template-columns: minmax(0, 1fr) 170px; gap: 14px; }
 .lw-list-main, .lw-column { position: relative; min-width: 0; }
 .lw-scroll { height: 560px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--sp-border) transparent; }
 .lw-outline { border-left: 1px solid var(--sp-border); padding-left: 12px; max-height: 560px; overflow-y: auto; }
-.lw-outline h3 { color: var(--sp-muted); font-size: 11px; font-weight: 500; margin: 0 0 10px; }
+.lw-outline h3 { color: var(--sp-muted); font-size: 13px; font-weight: 500; margin: 0 0 10px; }
 .sp-log-workspace .lw-outline button { width: 100%; display: flex; gap: 6px; align-items: center; text-align: left; border: 0; overflow-wrap: anywhere; }
-.lw-outline b, .lw-outline small { margin-left: auto; font-size: 10px; font-weight: 400; color: var(--sp-muted); }
+.lw-outline b, .lw-outline small { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--sp-muted); }
 .lw-outline i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .lw-outline-group { border-top: 1px solid var(--sp-border); padding: 7px 0; margin-top: 5px; }
-.sp-log-workspace .lw-outline .lw-scene-link { font-size: 11px; padding-left: 21px; color: var(--sp-muted); }
-.lw-board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(285px, 1fr); gap: 12px; overflow-x: auto; padding: 2px 2px 12px; scroll-snap-type: x proximity; }
+.sp-log-workspace .lw-outline .lw-scene-link { font-size: 13px; padding-left: 21px; color: var(--sp-muted); }
+.lw-board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(320px, 1fr); gap: 12px; overflow-x: auto; padding: 2px 2px 12px; scroll-snap-type: x proximity; }
 .lw-column { border: 1px solid var(--sp-border); border-top: 3px solid var(--window-color); border-radius: 12px; background: var(--sp-inset); scroll-snap-align: start; }
 .lw-column-head { padding: 12px 10px 8px; }
 .lw-column-head > div:first-child { display: flex; align-items: center; gap: 8px; }
-.lw-column-head strong { font-size: 13px; overflow-wrap: anywhere; }
-.lw-column-head b { margin-left: auto; color: var(--sp-muted); font-size: 11px; }
+.lw-column-head strong { font-size: 15px; overflow-wrap: anywhere; }
+.lw-column-head b { margin-left: auto; color: var(--sp-muted); font-size: 13px; }
 .lw-window-number { color: var(--sp-primary); background: var(--sp-primary-soft); border-radius: 5px; width: 22px; text-align: center; flex-shrink: 0; }
 .lw-column-actions { display: flex; gap: 9px; margin-top: 9px; }
-.sp-log-workspace .lw-column-actions button { border: 0; background: none; padding: 0; font-size: 10px; color: var(--sp-muted); }
+.sp-log-workspace .lw-column-actions button { border: 0; background: none; padding: 0; font-size: 12px; color: var(--sp-muted); }
 .lw-column-scenes { display: flex; gap: 5px; overflow-x: auto; padding: 0 10px 8px; min-height: 32px; }
-.sp-log-workspace .lw-column-scenes button { white-space: nowrap; font-size: 10px; padding: 2px 6px; border-radius: 12px; }
+.sp-log-workspace .lw-column-scenes button { white-space: nowrap; font-size: 12px; padding: 2px 6px; border-radius: 12px; }
 .lw-column .lw-scroll { height: 510px; padding: 0 6px; }
-.lw-empty { position: absolute; top: 40%; left: 14px; right: 14px; color: var(--sp-muted); text-align: center; font-size: 12px; pointer-events: none; }
+.lw-empty { position: absolute; top: 40%; left: 14px; right: 14px; color: var(--sp-muted); text-align: center; font-size: 14px; pointer-events: none; }
 .sp-log-workspace .log-entry { background: var(--sp-surface); border: 1px solid var(--sp-border); border-left: 3px solid var(--window-color); border-radius: 9px; padding: 11px; margin: 0 3px 10px 0; transition: border-color .15s; }
 .sp-log-workspace .log-entry.is-selected { background: color-mix(in srgb, var(--sp-primary-soft) 45%, var(--sp-surface)); }
 .sp-log-workspace .log-entry.is-drag-over { border-color: var(--sp-primary); box-shadow: inset 0 0 0 1px var(--sp-primary); }
 .sp-log-workspace .log-entry.is-search-hit { outline: 2px solid var(--sp-primary); outline-offset: -2px; }
 .log-entry-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.log-entry-head strong { font-size: 12px; overflow-wrap: anywhere; min-width: 0; flex: 1; }
-.log-entry-head small { display: block; color: var(--sp-muted); font-size: 9px; font-weight: 400; }
-.log-entry-head time { color: var(--sp-muted); font-size: 9px; margin-left: auto; }
+.log-entry-head strong { font-size: 14px; overflow-wrap: anywhere; min-width: 0; flex: 1; }
+.log-entry-head small { display: block; color: var(--sp-muted); font-size: 12px; font-weight: 400; }
+.log-entry-head time { color: var(--sp-muted); font-size: 12px; margin-left: auto; }
 .sp-log-workspace .drag-handle { cursor: grab; border: 0; padding: 1px; background: none; color: var(--sp-muted); font-size: 18px; }
-.log-entry-labels { display: flex; flex-wrap: wrap; gap: 4px; font-size: 9px; margin: 8px 0; color: var(--sp-muted); }
+.log-entry-labels { display: flex; flex-wrap: wrap; gap: 4px; font-size: 12px; margin: 8px 0; color: var(--sp-muted); }
 .log-entry-labels span { background: var(--sp-inset); padding: 2px 5px; border-radius: 4px; overflow-wrap: anywhere; }
-.log-content-preview { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; min-height: 30px; padding: 4px 0 10px; max-height: 280px; overflow-y: auto; }
-.sp-log-workspace .log-entry-textarea { width: 100%; resize: vertical; line-height: 1.8; margin: 4px 0; box-sizing: border-box; }
+.log-content-preview { font-size: 16px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; min-height: 30px; padding: 4px 0 10px; max-height: 280px; overflow-y: auto; }
+.sp-log-workspace .log-entry-textarea { font-size: 16px; width: 100%; resize: vertical; line-height: 1.8; margin: 4px 0; box-sizing: border-box; }
 .log-entry-expression { margin: 6px 0; }
 .log-entry-actions { display: flex; flex-wrap: wrap; gap: 7px; border-top: 1px solid var(--sp-border); padding-top: 8px; }
-.sp-log-workspace .log-entry-actions button { padding: 1px 0; border: 0; background: none; color: var(--sp-muted); font-size: 10px; }
+.sp-log-workspace .log-entry-actions button { padding: 1px 0; border: 0; background: none; color: var(--sp-muted); font-size: 12px; }
 .log-action-spacer { flex: 1; }
 .lw-dialog { display: grid; gap: 12px; }
 .lw-dialog label { display: grid; gap: 6px; }
