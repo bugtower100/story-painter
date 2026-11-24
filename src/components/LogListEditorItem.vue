@@ -5,6 +5,7 @@
     <header class="log-entry-head">
       <button class="drag-handle" draggable="true" aria-label="拖动发言" @dragstart="startDrag" @dragend="dragOver = false">⠿</button>
       <input type="checkbox" :checked="selectedIds.includes(source.id)" :aria-label="'选择 ' + source.name + ' 的发言'" @change="onSelect(source.id, ($event.target as HTMLInputElement).checked)" />
+      <span class="log-entry-avatar"><img v-if="avatar" :src="avatar" alt="" /><span v-else>{{ source.name.slice(0, 1) }}</span></span>
       <strong>{{ source.name }}<small v-if="source.account">({{ source.account }})</small></strong>
       <time>{{ source.time }}</time>
     </header>
@@ -25,7 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
+import { useStore } from '~/store'
+import type { LogItem } from '~/logManager/types'
 import type { WorkspaceEntry } from '../editor/listWorkspace'
 const props = defineProps<{
   source: WorkspaceEntry
@@ -44,6 +47,8 @@ const props = defineProps<{
   onMove: (ids: string[], window: string, target: string, after: boolean) => void
 }>()
 const editing = ref(false)
+const store = useStore()
+const avatar = computed(() => store.getAvatar({ nickname: props.source.name, IMUserId: props.source.account, expressionTag: props.source.expression } as LogItem))
 const textArea = ref<HTMLTextAreaElement>()
 const dragOver = ref(false)
 const beginEdit = () => { editing.value = true; nextTick(() => textArea.value?.focus()) }

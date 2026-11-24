@@ -18,9 +18,9 @@
       <select v-model="sourceFilter" aria-label="筛选来源"><option value="">全部来源</option><option v-for="source in sources" :key="source">{{ source }}</option></select>
       <select v-model="windowFilter" aria-label="筛选窗口"><option value="">全部窗口</option><option v-for="window in allWindows" :key="window">{{ window }}</option></select>
     </div>
-    <div class="lw-batch">
-      <label><input type="checkbox" :checked="allSelected" @change="selectVisible(($event.target as HTMLInputElement).checked)" /> 选择筛选内发言</label><span>已选 {{ selectedIds.length }} 条</span>
-      <button :disabled="!selectedIds.length" @click="openBlock('create')">组成内容块</button><button :disabled="!selectedIds.some(id => blockNames.has(id))" @click="change(extractBlockEntries(state, selectedIds))">移出内容块</button><button :disabled="selectedIds.length < 2" @click="mergeSelected">合并发言</button><button :disabled="!selectedIds.length" @click="remove(selectedIds)">删除选中</button>
+    <div class="lw-batch" :class="{ 'has-selection': selectedIds.length }">
+      <label><input type="checkbox" :checked="allSelected" @change="selectVisible(($event.target as HTMLInputElement).checked)" /> 选择筛选内发言</label><span>{{ selectedIds.length ? '已选 ' + selectedIds.length + ' 条' : '选择后可分块、合并或删除' }}</span>
+      <template v-if="selectedIds.length"><button @click="openBlock('create')">组成内容块</button><button :disabled="!selectedIds.some(id => blockNames.has(id))" @click="change(extractBlockEntries(state, selectedIds))">移出内容块</button><button :disabled="selectedIds.length < 2" @click="mergeSelected">合并发言</button><button @click="remove(selectedIds)">删除选中</button></template>
       <template v-if="layout === 'board'"><select v-model="moveTo" aria-label="修改窗口归属"><option value="" disabled>修改窗口归属…</option><option v-for="window in allWindows" :key="window">{{ window }}</option></select><button :disabled="!selectedIds.length || !moveTo" @click="move(selectedIds, moveTo)">确认改窗</button></template>
     </div>
     <div v-if="layout === 'blocks'" class="lw-toolbar lw-block-toolbar"><span>{{ state.blocks.length }} 个内容块 · 已选 {{ selectedBlockIds.length }} 块</span><button :disabled="selectedBlockIds.length < 2" @click="openBlock('merge')">合并选中块</button><button :disabled="!selectedBlockIds.length" @click="change(dissolveContentBlocks(state, selectedBlockIds))">解除选中块</button></div>
@@ -322,5 +322,30 @@ const updateCharacterIdentity = (previous: { name: string; IMUserId: string }, n
   })) }
   history.clear()
 }
-defineExpose({ flushPendingChanges, openImport, updateCharacterIdentity })
+const revealIndex = async (index: number) => {
+  const entry = state.value.entries[index]
+  if (!entry) return
+  sourceFilter.value = ''; windowFilter.value = ''; query.value = ''; layout.value = 'list'
+  await reveal(entry.id)
+  await nextTick()
+  root.value?.querySelector<HTMLElement>(`[data-entry-id="${entry.id}"] .log-content-preview`)?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+}
+const reorderByIndex = (from: number, to: number, after: boolean) => {
+  const source = state.value.entries[from], target = state.value.entries[to]
+  if (source && target) { change(reorderEntries(state.value, [source.id], target.id, after)); flushPendingChanges() }
+}
+const setExpressionByIndex = (index: number, expression: string) => {
+  const entry = state.value.entries[index]
+  if (entry) { edit(entry.id, { expression }); flushPendingChanges() }
+}
+const outline = computed(() => {
+  const indexes = new Map(state.value.entries.map((entry, index) => [entry.id, index]))
+  return units.value.map(unit => ({ id: unit.id, block: !!unit.blockId, name: unit.blockId ? state.value.blocks.find(b => b.id === unit.blockId)?.name || '未命名内容块' : unit.entries[0].name,
+    preview: unit.entries[0].text.slice(0, 70), count: unit.entries.length, channel: [...new Set(unit.entries.map(e => e.window))].join(' / '), index: indexes.get(unit.entries[0].id)! }))
+})
+const browseChannel = (channel: string) => { query.value = ''; sourceFilter.value = ''; windowFilter.value = channel; layout.value = channel ? 'list' : 'blocks' }
+const updateTextByIndex = (index: number, text: string) => { const entry = state.value.entries[index]; if (entry) edit(entry.id, { text }, true) }
+const setWindowByIndex = (index: number, channel: string) => { const entry = state.value.entries[index]; if (entry) { edit(entry.id, { window: channel }); flushPendingChanges() } }
+const reorderOutline = (id: string, target: string, after: boolean) => { change(reorderContentUnits(state.value, [id], target, after)); flushPendingChanges() }
+defineExpose({ flushPendingChanges, finishEdit, openImport, updateCharacterIdentity, revealIndex, reorderByIndex, setExpressionByIndex, updateTextByIndex, setWindowByIndex, browseChannel, reorderOutline, outline, channelNames: displayedWindows, undo, redo })
 </script>

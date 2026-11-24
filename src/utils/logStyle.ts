@@ -138,13 +138,19 @@ export interface StyledMessage {
   body: string; time: string; channel: string; messageType: string
 }
 
+export function canMergeStyledMessages(previous: StyledMessage | undefined, current: StyledMessage) {
+  return !!previous && previous.identityKey === current.identityKey && previous.name === current.name &&
+    previous.variantKey === current.variantKey && previous.avatar === current.avatar &&
+    previous.messageType === current.messageType && previous.channel === current.channel
+}
+
 export function safeImageUrl(value: string) {
   // These URLs also pass through the existing CQ-image serializer.
   if (/[\s"'<>`\u0000-\u001f]/.test(value)) return ''
   return /^(https?:\/\/|data:image\/(png|jpeg|gif|webp);base64,|\/[^/])/i.test(value) ? value.replace(/\[/g, '%5B').replace(/\]/g, '%5D') : ''
 }
 
-export function renderStyledLog(pkg: LogStylePackage, messages: StyledMessage[], title: string, baseCss: string): string {
+export function renderStyledLog(pkg: LogStylePackage, messages: StyledMessage[], title: string, baseCss: string, mergeNeighbors = true): string {
   validateStyle(pkg)
   const doc = document.implementation.createHTMLDocument(title)
   if (logStylePresets.some(style => style.id === pkg.id)) doc.head.append(doc.createComment(sealChatStyleLicense))
@@ -166,11 +172,12 @@ export function renderStyledLog(pkg: LogStylePackage, messages: StyledMessage[],
   const style = doc.createElement('style')
   style.textContent = (baseCss + '\n' + css).replace(/</g, '\\3c ')
   doc.head.append(style)
-  doc.body.className = 'export-body'
+  doc.body.className = 'export-body log-pages'
   const container = doc.createElement('main')
-  container.className = 'log-export-container'
+  container.className = 'log-export-container log-flow'
   const heading = doc.createElement('h1'); heading.textContent = title; container.append(heading)
-  for (const message of messages) {
+  let previous: StyledMessage | undefined, previousTemplate: string | undefined
+  for (const [index, message] of messages.entries()) {
     const rule = pkg.rules.find(r => (!r.messageType || r.messageType === message.messageType) && (!r.identityKey || r.identityKey === message.identityKey) && (!r.variantKey || r.variantKey === message.variantKey))
     const fragment = rule ? expandTemplate(pkg, rule.templateId) : expandTemplate(starterStyle(), 'message')
     const plain = doc.createElement('div'); plain.innerHTML = message.body
@@ -183,10 +190,15 @@ export function renderStyledLog(pkg: LogStylePackage, messages: StyledMessage[],
     body.innerHTML = message.body
     const node = doc.createElement('section')
     node.className = 'log-node log-node--message'
+    node.dataset.logIndex = String(index)
+    if (mergeNeighbors && previousTemplate === rule?.templateId && canMergeStyledMessages(previous, message)) {
+      node.classList.add('log-merged'); node.dataset.logMerged = '1'
+    }
     node.dataset.logType = message.messageType; node.dataset.logSpeaker = message.identityKey; node.dataset.logChannel = message.channel
     if (message.variantKey) node.dataset.logVariant = message.variantKey
     node.style.setProperty('--log-speaker-color', message.color)
     node.append(fragment); container.append(node)
+    previous = message; previousTemplate = rule?.templateId
   }
   doc.body.append(container)
   return '<!DOCTYPE html>\n' + root.outerHTML

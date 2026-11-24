@@ -1,7 +1,7 @@
 <template>
   <div class="sp-app">
     <a class="sp-skip" href="#story-editor">跳到日志编辑区</a>
-    <header class="sp-header">
+    <header v-show="!showWorkbench" class="sp-header">
       <div class="sp-brand">
         <OrbitMark class="sp-brand-mark" />
         <div><strong>Story Painter</strong></div>
@@ -17,7 +17,7 @@
     </header>
 
     <main class="sp-page">
-      <section class="sp-intro" aria-labelledby="page-title">
+      <section v-show="!showWorkbench" class="sp-intro" aria-labelledby="page-title">
         <div class="sp-intro-copy">
           <h1 id="page-title">跑团log染色器-pry改版</h1>
           <p>导入日志 · 角色染色 · 编辑预览 · 多格式导出</p>
@@ -37,19 +37,17 @@
               <n-input v-if="store.pcList.length > 5" v-model:value="characterQuery" size="small" clearable placeholder="搜索名字或 ID" :input-props="{ 'aria-label': '搜索角色' }" class="sp-character-search" />
               <div id="character-list" class="sp-character-list" :class="{ 'is-expanded': charactersExpanded }" tabindex="0" role="region" aria-label="角色列表，可在此区域滚动">
                 <div v-for="{ character: i, index } in visibleCharacters" :key="i.IMUserId + ':' + index" class="sp-character">
-                  <button class="sp-avatar" :style="{ '--character-color': i.color }" :aria-label="'上传 ' + i.name + ' 的头像'" :disabled="previewActive" @click="avatarInputs[index]?.click()">
+                  <span class="sp-avatar" :style="{ '--character-color': i.color }">
                     <img v-if="i.avatar" :src="i.avatar" alt="" /><span v-else>{{ i.name.slice(0, 1) }}</span>
-                  </button>
+                  </span>
                   <div class="sp-character-info">
                     <CharacterIdentityEditor :character="i" @save="(name, account) => saveCharacterIdentity(i, name, account)" />
                   </div>
                   <n-color-picker v-model:value="i.color" class="sp-character-color" :show-alpha="false" :swatches="colors" :on-update:value="(v) => colorChanged(v, i)" :aria-label="i.name + ' 的颜色'" />
                   <div class="sp-character-bottom">
                     <n-select v-model:value="i.role" size="small" :options="roleOptions" :aria-label="i.name + ' 的身份'" />
-                    <button class="sp-text-button" :disabled="previewActive" @click="avatarInputs[index]?.click()">上传头像</button>
                     <button class="sp-icon-button sp-delete" :disabled="previewActive" :aria-label="'删除角色 ' + i.name" @click="deletePc(index, i)"><n-icon :size="16"><icon-delete /></n-icon></button>
                   </div>
-                  <input :ref="el => avatarInputs[index] = el as HTMLInputElement" type="file" accept="image/*" hidden @change="(e) => onAvatarFileChange(e, i)" />
                 </div>
                 <p v-if="!store.pcList.length" class="sp-empty">导入或粘贴日志后，角色会出现在这里。</p>
                 <p v-else-if="!visibleCharacters.length" class="sp-empty">没有匹配的角色。</p>
@@ -58,7 +56,7 @@
                 <button class="sp-text-button" :aria-expanded="charactersExpanded" aria-controls="character-list" @click="charactersExpanded = !charactersExpanded">{{ charactersExpanded ? '收起角色列表' : '展开更多角色' }}</button>
                 <span v-if="visibleCharacters.length > (charactersExpanded ? 8 : 4)" class="sp-hint">↕ 可在列表内滚动</span>
               </div>
-              <button class="sp-workbench-link" @click="openWorkbenchFromButton"><span>头像与差分工作台<small>角色表情 · 背景 · 气泡 · 导出样式</small></span><span aria-hidden="true">↗</span></button>
+              <button class="sp-workbench-link" @click="openWorkbenchFromButton"><span>跑团工作台<small>编辑排版 · 头像差分 · HTML / PDF</small></span><span aria-hidden="true">↗</span></button>
             </div>
           </details>
 
@@ -101,18 +99,19 @@
             <template #description>正在载入远程日志……</template>
             <div class="sp-editor-content">
               <code-mirror v-show="!previewActive && editorMode === 'text'" ref="editor" @change="onChange" />
-              <log-list-editor v-if="listVisited" v-show="editorMode === 'list' && !previewActive" ref="listEditor" :initial-content="editorText" :active="editorMode === 'list' && !previewActive && !showWorkbench" :source-name="sourceName" :document-version="documentVersion" @update:content="onListEditorUpdate" />
+              <Teleport v-if="listVisited || showWorkbench" defer :to="showWorkbench ? '#workbench-list-editor' : 'body'" :disabled="!showWorkbench">
+                <log-list-editor v-show="showWorkbench || (editorMode === 'list' && !previewActive)" ref="listEditor" :initial-content="editorText" :active="showWorkbench || (editorMode === 'list' && !previewActive)" :source-name="sourceName" :document-version="documentVersion" @update:content="onListEditorUpdate" />
+              </Teleport>
               <preview-main-noavatar :is-show="isShowPreview" :preview-items="previewItems" />
               <preview-bbs :is-show="isShowPreviewBBS" :preview-items="previewItems" />
               <preview-trg :is-show="isShowPreviewTRG" :preview-items="previewItems" />
-              <preview-bubble :is-show="isShowPreviewWithAvatar" :preview-items="previewItems" />
             </div>
           </n-spin>
           <div class="sp-editor-footer"><span>{{ store.pcList.length }} 位角色<span class="sp-footer-dot">·</span>{{ editorText.length.toLocaleString() }} 字符</span><span>本地导入：海豹、青果、溯洄、QQ、CCF、SealChat</span></div>
         </section>
       </div>
-      <section v-if="showWorkbench" class="sp-workbench sp-panel"><ccfolia-workbench :items="logMan.curItems" @close="closeWorkbench" /></section>
-      <footer class="sp-footer"><span>跑团log染色器-pry改版</span><span>Story Painter</span></footer>
+      <ccfolia-workbench v-if="showWorkbench" :items="logMan.curItems" :outline="listEditor?.outline || []" :channel-names="listEditor?.channelNames || []" @close="closeWorkbench" @edit-entry="index => listEditor?.revealIndex(index)" @reorder="(from, to, after) => listEditor?.reorderByIndex(from, to, after)" @set-expression="(index, tag) => listEditor?.setExpressionByIndex(index, tag)" @update-text="(index, text) => listEditor?.updateTextByIndex(index, text)" @set-window="(index, channel) => listEditor?.setWindowByIndex(index, channel)" @browse-channel="channel => listEditor?.browseChannel(channel)" @reorder-outline="(id, target, after) => listEditor?.reorderOutline(id, target, after)" @finish-edit="listEditor?.finishEdit()" @flush="flushListChanges" @undo="listEditor?.undo()" @redo="listEditor?.redo()" />
+      <footer v-show="!showWorkbench" class="sp-footer"><span>跑团log染色器-pry改版</span><span>Story Painter</span></footer>
     </main>
   </div>
 </template>
@@ -135,7 +134,6 @@ import previewMain from "./components/previews/preview-main.vue";
 import previewMainNoavatar from "./components/previews/preview-main-noavatar.vue";
 import previewBbs from "./components/previews/preview-bbs.vue";
 import previewTrg from "./components/previews/preview-trg.vue";
-import previewBubble from "./components/previews/preview-bubble.vue";
 import PreviewItem from './components/previews/preview-main-item.vue'
 import PreviewItemNoavatar from './components/previews/preview-main-item-noavatar.vue'
 import PreviewTableTR from './components/previews/preview-table-tr.vue'
@@ -186,19 +184,19 @@ watch(() => store.pcList.length, count => { if (count <= 5) characterQuery.value
 const roleOptions = ['主持人', '角色', '骰子', '隐藏'].map(role => ({ value: role, label: role }))
 const views = [
   { id: 'text', label: '文本编辑' }, { id: 'list', label: '列表编辑' },
-  { id: 'preview', label: '阅读预览' }, { id: 'avatar', label: '头像与差分' },
+  { id: 'preview', label: '阅读预览' }, { id: 'workbench', label: '跑团工作台' },
   { id: 'bbs', label: '论坛代码' }, { id: 'trg', label: '回声工坊' },
 ] as const
 type StoryView = typeof views[number]['id']
-const previewActive = computed(() => isShowPreview.value || isShowPreviewBBS.value || isShowPreviewTRG.value || isShowPreviewWithAvatar.value)
-const activeView = computed<StoryView>(() => isShowPreview.value ? 'preview' : isShowPreviewBBS.value ? 'bbs' : isShowPreviewTRG.value ? 'trg' : isShowPreviewWithAvatar.value ? 'avatar' : editorMode.value)
+const previewActive = computed(() => isShowPreview.value || isShowPreviewBBS.value || isShowPreviewTRG.value)
+const activeView = computed<StoryView>(() => isShowPreview.value ? 'preview' : isShowPreviewBBS.value ? 'bbs' : isShowPreviewTRG.value ? 'trg' : editorMode.value)
 const setView = (view: StoryView) => {
+  if (view === 'workbench') { openWorkbenchFromButton(); return }
   flushListChanges()
   if (view === 'list') listVisited.value = true
   isShowPreview.value = view === 'preview'
   isShowPreviewBBS.value = view === 'bbs'
   isShowPreviewTRG.value = view === 'trg'
-  isShowPreviewWithAvatar.value = view === 'avatar'
   if (view === 'text' || view === 'list') editorMode.value = view
   else {
     if (view === 'bbs' || view === 'trg') store.exportOptions.imageHide = true
@@ -207,9 +205,10 @@ const setView = (view: StoryView) => {
 }
 
 const showWorkbench = ref(false)
+watch(showWorkbench, visible => { if (visible) listVisited.value = true })
 const editorMode = ref<'text' | 'list'>('text')
-const openWorkbench = () => { flushListChanges(); showWorkbench.value = true }
-const closeWorkbench = () => { showWorkbench.value = false }
+const openWorkbench = () => { flushListChanges(); listVisited.value = true; showWorkbench.value = true }
+const closeWorkbench = () => { flushListChanges(); showWorkbench.value = false }
 const openWorkbenchFromButton = () => {
   openWorkbench()
   window.location.hash = '#workbench'
@@ -274,7 +273,6 @@ const downloadUsableRank = ref(0)
 const isShowPreview = ref(false)
 const isShowPreviewBBS = ref(false)
 const isShowPreviewTRG = ref(false)
-const isShowPreviewWithAvatar = ref(false)
 
 const colors = ref<string[]>([])
 const refreshColors = () => {
@@ -288,23 +286,6 @@ const colorChanged = debounce((v: string, i: CharItem) => {
   store.colorMapSave();
 }, 300)
 
-const avatarInputs = ref<HTMLInputElement[]>([])
-function setAvatarInputRef(index: number) {
-  return (el: any) => { avatarInputs.value[index] = el as HTMLInputElement }
-}
-function onAvatarFileChange(e: Event, i: CharItem) {
-  const input = e.target as HTMLInputElement
-  const file = input.files && input.files[0]
-  if (!file) return
-  const reader = new FileReader()
-  reader.onload = () => {
-    const url = reader.result as string
-    store.setAvatar(i.name, url, i.IMUserId)
-    message.success('头像已更新', { duration: 800 })
-    input.value = ''
-  }
-  reader.readAsDataURL(file)
-}
 
 let ccfInput: HTMLInputElement | null = null
 function setCcfInputRef(el: any) { ccfInput = el as HTMLInputElement }

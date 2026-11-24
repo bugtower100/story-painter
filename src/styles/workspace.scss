@@ -12,7 +12,7 @@
   input[type=checkbox] { accent-color: var(--sp-primary); vertical-align: middle; }
   :is(button, input, textarea, select):focus-visible { outline: 2px solid var(--sp-primary); outline-offset: 2px; }
 }
-.sp-log-workspace { padding: 16px; min-width: 0; outline: none; }
+.sp-log-workspace { padding: 22px; min-width: 0; outline: none; }
 .lw-toolbar, .lw-search, .lw-batch { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
 .lw-spacer { flex: 1; }
 .lw-segment { display: flex; gap: 3px; padding: 3px; background: var(--sp-inset); border-radius: 9px; }
@@ -94,5 +94,19 @@
 .lw-guide strong { color: var(--sp-text); }
 .lw-guide-example { background: var(--sp-inset); border-left: 3px solid var(--sp-primary); padding: 12px; border-radius: 7px; }
 .lw-guide > button { justify-self: end; }
+
+// Distinct view, filter, selection and document areas in both editor surfaces.
+.sp-log-workspace > .lw-toolbar:first-child { padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid var(--sp-border); gap:10px; }
+.lw-import { margin:0 0 18px; padding:12px 14px; background:var(--sp-surface); }
+.lw-search { padding:14px; margin-bottom:12px; border:1px solid var(--sp-border); border-radius:10px; background:var(--sp-surface); gap:10px; }
+.lw-batch { padding:10px 14px; margin-bottom:16px; background:var(--sp-inset); border-radius:8px; gap:10px; color:var(--sp-muted); font-size:13px; }
+.lw-batch.has-selection { border-left:3px solid var(--sp-primary); color:var(--sp-text); background:var(--sp-primary-soft); }
+.lw-help { margin:12px 0 18px; line-height:1.8; }
+.lw-list-layout { gap:22px; grid-template-columns:minmax(0,1fr) 175px; }
+.lw-outline { border:1px solid var(--sp-border); border-radius:10px; padding:14px; background:var(--sp-surface); }
+.sp-log-workspace .log-entry { padding:18px; margin:0 5px 16px 0; border-left-width:3px; box-shadow:0 2px 6px #39224605; }
+.log-entry-head { gap:9px; }.log-entry-head strong { font-size:16px; }.log-entry-head small { margin-top:3px; }
+.log-entry-avatar { display:grid; place-items:center; flex-shrink:0; width:34px; height:34px; overflow:hidden; border:1px solid var(--sp-border); border-radius:50%; color:var(--sp-primary); background:var(--sp-primary-soft); }.log-entry-avatar img { width:100%; height:100%; object-fit:cover; }
+.log-entry-labels { margin:12px 0; gap:6px; }.log-content-preview { font-size:16px; line-height:1.85; padding:6px 0 14px; max-height:210px; overflow:auto; }.log-entry-actions { gap:12px; padding-top:12px; }.sp-log-workspace .log-entry-actions button { font-size:13px; }
 @media (max-width: 1100px) { .lw-list-layout { grid-template-columns: minmax(0, 1fr); } .lw-outline { order: -1; border: 0; padding: 0; max-height: 150px; } }
 @media (max-width: 600px) { .sp-log-workspace { padding: 10px; } .lw-import summary span { display: block; margin: 4px 0 0; } .lw-board { grid-auto-columns: minmax(260px, 90%); } .lw-search select { flex: 1; max-width: 48%; } .lw-scroll { height: 480px; } }

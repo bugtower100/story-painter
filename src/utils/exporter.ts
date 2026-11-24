@@ -19,15 +19,21 @@ function pickAvatar(store: ReturnType<typeof useStore>, item: LogItem) {
 function workbenchLayoutCss() {
   const w = useStore().workbench
   const url = (v: string) => v ? `url(${JSON.stringify(v)})` : 'none'
-  return `:root { --log-font-size:${w.fontSize}px; --log-line-height:${w.lineHeight}; --log-avatar-size:${w.iconSize}px; --log-avatar-radius:${w.avatarRadius}px; --log-bubble-bg:${w.bubbleColor}; }
-  body { font-family:system-ui,sans-serif; margin:0; padding:24px; background-color:${w.globalBackgroundColor || '#f1eaf7'}; background-image:${url(w.backgroundImage)}; background-size:cover; }
-  .log-export-container { box-sizing:border-box; max-width:${w.contentWidth}px; margin:auto; padding:24px; background-color:${w.containerColor}; background-color:color-mix(in srgb, ${w.containerColor} ${w.containerOpacity}%, transparent); background-image:${url(w.containerBackgroundImage)}; background-size:cover; }
-  .log-export-container, .bubble.export { font-size:${w.fontSize}px; line-height:${w.lineHeight}; }
+  const font = w.fontFamily === 'serif' ? '"Songti SC","Noto Serif CJK SC",SimSun,serif' : 'system-ui,"Microsoft YaHei",sans-serif'
+  const width = w.pageSize === 'a4' ? '210mm' : w.pageSize === 'letter' ? '216mm' : `${w.contentWidth}px`
+  const height = w.pageSize === 'flow' ? '0' : w.pageSize === 'letter' ? '279mm' : '297mm'
+  return `:root { --log-font-family:${font}; --log-page-bg:${w.containerColor}; --log-font-size:${w.fontSize}px; --log-line-height:${w.lineHeight}; --log-avatar-size:${w.iconSize}px; --log-avatar-radius:${w.avatarRadius}px; --log-bubble-bg:${w.bubbleColor}; }
+  body { font-family:var(--log-font-family); font-size:var(--log-font-size); line-height:var(--log-line-height); margin:0; padding:24px; color:#1f2329; background-color:${w.globalBackgroundColor || '#e9e7ed'}; background-image:${url(w.backgroundImage)}; background-size:cover; }
+  .log-export-container { box-sizing:border-box; width:${width}; max-width:100%; min-height:${height}; margin:auto; padding:${w.pageMargin}mm; background-color:var(--log-page-bg); background-image:${url(w.containerBackgroundImage)}; background-size:cover; column-count:${w.columns}; column-gap:10mm; }
+  .log-export-container > h1 { column-span:all; margin:0 0 1em; }
   .log-node, .message-item.export { margin-bottom:${w.messageGap}px; overflow-wrap:anywhere; }
+  .log-node { break-inside:avoid; } .log-body p { margin:0 0 .4em; } .log-body p:last-child { margin-bottom:0; }
   .icon.export { border-radius:${w.avatarRadius}px; }
   .bubble { background-image:${url(w.bubbleBackgroundImage)}; background-size:cover; }
   [data-log-slot="body"] { white-space:normal; } img { max-width:100%; } h1 { font-size:1.5em; }
-  @media(max-width:600px) { body { padding:8px; } .log-export-container { padding:12px; } }`
+  @media screen and (max-width:600px) { body { padding:8px; } .log-export-container { padding:16px; } }
+  @page { size:${w.pageSize === 'letter' ? 'letter' : 'A4'}; margin:${w.pageMargin}mm; }
+  @media print { html { print-color-adjust:exact; -webkit-print-color-adjust:exact; } body { padding:0; background:white; } .log-export-container { width:auto; max-width:none; min-height:0; padding:0; margin:0; box-shadow:none; } }`
 }
 
 async function customStyleHtml(results: LogItem[], embedAssets: boolean) {
@@ -38,8 +44,10 @@ async function customStyleHtml(results: LogItem[], embedAssets: boolean) {
     const pc = store.pcMap.get(packNameId(item))
     if (item.isRaw || pc?.role === '隐藏') continue
     // The HTML template owns its layout; text-view header indentation does not belong in its body.
-    render(h(PreviewItemNoavatar, { source: item, alignContinuation: false }), el)
-    const body = el.querySelector('.list-item-dynamic > div')?.innerHTML || ''
+    render(h(PreviewItemNoavatar, { source: { ...item, message: item.message.replace(/\n+$/, '') }, alignContinuation: false }), el)
+    const rawBody = el.querySelector('.list-item-dynamic > div')?.innerHTML || ''
+    // SealChat's message templates expect paragraph elements inside .log-body.
+    const body = rawBody.split(/<br\s*\/?\s*>/i).map(line => `<p>${line || '<br>'}</p>`).join('')
     messages.push({ name: item.nickname, identityKey: item.IMUserId, variantKey: item.expressionTag,
       avatar: store.getAvatar(item), color: pc?.color || '#55445f', body,
       time: store.exportOptions.timeHide ? '' : item.time ? dayjs.unix(item.time).format(store.exportOptions.yearHide ? 'HH:mm:ss' : 'YYYY/MM/DD HH:mm:ss') : item.timeText || '',
@@ -47,7 +55,7 @@ async function customStyleHtml(results: LogItem[], embedAssets: boolean) {
     })
   }
   render(null, el)
-  let html = renderStyledLog(store.workbench.stylePackage!, messages, store.workbench.title || '跑团记录', workbenchLayoutCss())
+  let html = renderStyledLog(store.workbench.stylePackage!, messages, store.workbench.title || '跑团记录', workbenchLayoutCss(), store.workbench.mergeNeighbors)
   if (embedAssets) {
     const doc = new DOMParser().parseFromString(html, 'text/html')
     const urls = [...new Set(Array.from(doc.images).map(img => img.getAttribute('src') || '').filter(src => src && !src.startsWith('data:')))]

@@ -99,6 +99,11 @@ export const useStore = defineStore('main', {
         contentWidth: 960,
         messageGap: 20,
         avatarRadius: 12,
+        pageSize: 'a4',
+        pageMargin: 20,
+        columns: 1,
+        fontFamily: 'sans-serif',
+        mergeNeighbors: true,
         useCustomStyle: false,
         stylePackage: null as LogStylePackage | null,
         characterAssets: {} as Record<string, CharacterAssets>,
@@ -262,6 +267,7 @@ export const useStore = defineStore('main', {
         iconSize: wb.iconSize,
         fontSize: wb.fontSize, lineHeight: wb.lineHeight, contentWidth: wb.contentWidth,
         messageGap: wb.messageGap, avatarRadius: wb.avatarRadius, useCustomStyle: wb.useCustomStyle,
+        pageSize: wb.pageSize, pageMargin: wb.pageMargin, columns: wb.columns, fontFamily: wb.fontFamily, mergeNeighbors: wb.mergeNeighbors,
         packed: packedKey ? undefined : packed, packedKey,
         pcNameExpressionsMap: expObj,
         pcNameExpressionsMapKeys: expObjKeys
@@ -321,6 +327,11 @@ export const useStore = defineStore('main', {
       this.workbench.contentWidth = data.contentWidth || 960
       this.workbench.messageGap = data.messageGap ?? 20
       this.workbench.avatarRadius = data.avatarRadius ?? 12
+      this.workbench.pageSize = ['a4', 'letter', 'flow'].includes(data.pageSize) ? data.pageSize : 'a4'
+      this.workbench.pageMargin = Math.max(8, Math.min(40, Number(data.pageMargin) || 20))
+      this.workbench.columns = data.columns === 2 ? 2 : 1
+      this.workbench.fontFamily = data.fontFamily === 'serif' ? 'serif' : 'sans-serif'
+      this.workbench.mergeNeighbors = data.mergeNeighbors !== false
       this.workbench.useCustomStyle = data.useCustomStyle || false
       const restore = (packed: { stylePackage?: LogStylePackage; characterAssets?: Record<string, CharacterAssets> }) => {
         this.workbench.stylePackage = packed.stylePackage || null
