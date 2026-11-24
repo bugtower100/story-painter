@@ -2,7 +2,8 @@
 import { defineStore } from 'pinia'
 import { EditorView } from '@codemirror/view';
 import axios from 'axios';
-import { CharItem, LogItem, packNameId } from './logManager/types';
+import { CharItem, CharacterAssets, LogItem, characterAssetKey, packNameId } from './logManager/types';
+import type { LogStylePackage } from './utils/logStyle';
 import { random } from 'lodash-es';
 import * as twColors from 'tailwindcss/colors';
 
@@ -93,6 +94,14 @@ export const useStore = defineStore('main', {
         rightBubbleColor: '#dcf8c6',
         bubbleColor: '#ffffff',
         iconSize: 64,
+        fontSize: 16,
+        lineHeight: 1.8,
+        contentWidth: 960,
+        messageGap: 20,
+        avatarRadius: 12,
+        useCustomStyle: false,
+        stylePackage: null as LogStylePackage | null,
+        characterAssets: {} as Record<string, CharacterAssets>,
         pcNameExpressionsMap: new Map<string, Record<string, string>>()
       },
 
@@ -230,6 +239,11 @@ export const useStore = defineStore('main', {
       if (bubbleBackgroundImageKey) void idbSetAsset(bubbleBackgroundImageKey, wb.bubbleBackgroundImage)
       if (containerBackgroundImageKey) void idbSetAsset(containerBackgroundImageKey, wb.containerBackgroundImage)
 
+      const packed = { stylePackage: wb.stylePackage, characterAssets: wb.characterAssets }
+      const packedJson = JSON.stringify(packed)
+      const packedKey = canUseIndexedDb && packedJson.length > 50_000 ? `${storageKey}:style-and-characters` : ''
+      if (packedKey) void idbSetAsset(packedKey, packedJson)
+
       const payload = {
         title: wb.title,
         backgroundImage: backgroundImageKey ? '' : wb.backgroundImage,
@@ -246,6 +260,9 @@ export const useStore = defineStore('main', {
         rightBubbleColor: wb.rightBubbleColor,
         bubbleColor: wb.bubbleColor,
         iconSize: wb.iconSize,
+        fontSize: wb.fontSize, lineHeight: wb.lineHeight, contentWidth: wb.contentWidth,
+        messageGap: wb.messageGap, avatarRadius: wb.avatarRadius, useCustomStyle: wb.useCustomStyle,
+        packed: packedKey ? undefined : packed, packedKey,
         pcNameExpressionsMap: expObj,
         pcNameExpressionsMapKeys: expObjKeys
       }
@@ -299,6 +316,25 @@ export const useStore = defineStore('main', {
       this.workbench.containerColor = data.containerColor || '#ffffff'
       this.workbench.containerOpacity = data.containerOpacity !== undefined ? data.containerOpacity : 90
       this.workbench.iconSize = data.iconSize || 64
+      this.workbench.fontSize = data.fontSize || 16
+      this.workbench.lineHeight = data.lineHeight || 1.8
+      this.workbench.contentWidth = data.contentWidth || 960
+      this.workbench.messageGap = data.messageGap ?? 20
+      this.workbench.avatarRadius = data.avatarRadius ?? 12
+      this.workbench.useCustomStyle = data.useCustomStyle || false
+      const restore = (packed: { stylePackage?: LogStylePackage; characterAssets?: Record<string, CharacterAssets> }) => {
+        this.workbench.stylePackage = packed.stylePackage || null
+        this.workbench.characterAssets = packed.characterAssets || {}
+        for (const pc of this.pcList) {
+          const avatar = this.workbench.characterAssets[characterAssetKey(pc.name, pc.IMUserId)]?.avatar
+          if (avatar) pc.avatar = avatar
+        }
+      }
+      restore(data.packed || {})
+      const initialAssets = this.workbench.characterAssets
+      if (data.packedKey) void idbGetAsset(data.packedKey).then(value => {
+        if (value && this.workbench.characterAssets === initialAssets) restore(JSON.parse(value))
+      })
       const expObj = data.pcNameExpressionsMap || {}
       const expObjKeys = data.pcNameExpressionsMapKeys || {}
       this.workbench.pcNameExpressionsMap = new Map<string, Record<string,string>>()
@@ -400,14 +436,14 @@ export const useStore = defineStore('main', {
       for (let [k, v] of charInfo) {
         const id = packNameId(v);
         if (!exists.has(id)) {
-          let c = this.pcNameColorMap.get(v.name);
+          let c = v.color || this.pcNameColorMap.get(v.name);
           if (!c) {
             c = this.getColor();
             this.pcNameColorMap.set(v.name, c);
             this.colorMapSave()
           }
           v.color = c;
-          const a = this.pcNameAvatarMap.get(v.name)
+          const a = this.workbench.characterAssets[characterAssetKey(v.name, v.IMUserId)]?.avatar || this.pcNameAvatarMap.get(v.name)
           if (a && !v.avatar) v.avatar = a
           this.pcList.push(v);
           exists.add(id);
@@ -477,20 +513,68 @@ export const useStore = defineStore('main', {
         index += 1
       }
     },
-    setAvatar(name: string, dataUrl: string) {
+    getExpressions(name: string, account: string): Record<string, string> {
+      return this.workbench.characterAssets[characterAssetKey(name, account)]?.expressions || this.workbench.pcNameExpressionsMap.get(name) || {}
+    },
+    getAvatar(item: LogItem): string {
+      const assets = this.workbench.characterAssets[characterAssetKey(item.nickname, item.IMUserId)]
+      return item.overrideAvatar || (item.expressionTag && this.getExpressions(item.nickname, item.IMUserId)[item.expressionTag]) || assets?.avatar || this.pcMap.get(packNameId(item))?.avatar || ''
+    },
+    importCharacterAssets(assets?: Record<string, CharacterAssets>) {
+      if (!assets) return
+      this.workbench.characterAssets = { ...this.workbench.characterAssets }
+      for (const [key, value] of Object.entries(assets)) {
+        const old = this.workbench.characterAssets[key]
+        this.workbench.characterAssets[key] = { avatar: old?.avatar || value.avatar, expressions: { ...value.expressions, ...old?.expressions } }
+      }
+      this.workbenchSave()
+    },
+    moveCharacterAssets(previous: Pick<CharItem, 'name' | 'IMUserId'>, name: string, account: string) {
+      const oldKey = characterAssetKey(previous.name, previous.IMUserId), newKey = characterAssetKey(name, account)
+      const old = this.workbench.characterAssets[oldKey], target = this.workbench.characterAssets[newKey]
+      const targetPc = this.pcList.find(pc => pc.name === name && pc.IMUserId === account)
+      if (old && oldKey !== newKey) {
+        this.workbench.characterAssets[newKey] = { avatar: target?.avatar || targetPc?.avatar || old.avatar, expressions: { ...old.expressions, ...target?.expressions } }
+        delete this.workbench.characterAssets[oldKey]
+        this.workbenchSave()
+      }
+    },
+    setAvatar(name: string, dataUrl: string, account?: string) {
+      if (account !== undefined) {
+        const key = characterAssetKey(name, account)
+        this.workbench.characterAssets[key] = { expressions: { ...this.getExpressions(name, account) }, avatar: dataUrl }
+        const pc = this.pcList.find(pc => pc.name === name && pc.IMUserId === account)
+        if (pc) pc.avatar = dataUrl
+        this.workbenchSave()
+        return
+      }
       this.pcNameAvatarMap.set(name, dataUrl)
       this.avatarMapSave()
       for (const pc of this.pcList) {
         if (pc.name === name) pc.avatar = dataUrl
       }
     },
-    setExpression(name: string, tag: string, dataUrl: string) {
+    setExpression(name: string, tag: string, dataUrl: string, account?: string) {
+      if (account !== undefined) {
+        const key = characterAssetKey(name, account)
+        this.workbench.characterAssets[key] = { ...this.workbench.characterAssets[key], expressions: { ...this.getExpressions(name, account), [tag]: dataUrl } }
+        this.workbenchSave()
+        return
+      }
       const m = this.workbench.pcNameExpressionsMap.get(name) || {}
       m[tag] = dataUrl
       this.workbench.pcNameExpressionsMap.set(name, m)
       this.workbenchSave()
     },
-    removeExpression(name: string, tag: string) {
+    removeExpression(name: string, tag: string, account?: string) {
+      if (account !== undefined) {
+        const key = characterAssetKey(name, account)
+        const expressions = { ...this.getExpressions(name, account) }
+        delete expressions[tag]
+        this.workbench.characterAssets[key] = { ...this.workbench.characterAssets[key], expressions }
+        this.workbenchSave()
+        return
+      }
       const m = this.workbench.pcNameExpressionsMap.get(name) || {}
       delete m[tag]
       this.workbench.pcNameExpressionsMap.set(name, m)

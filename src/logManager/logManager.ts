@@ -14,6 +14,7 @@ import { CcfoliaProjectImporter } from "./importers/CcfoliaProjectImporter";
 import { CcfoliaTextImporter } from "./importers/CcfoliaTextImporter";
 import { CcfoliaHtmlImporter } from "./importers/CcfoliaHtmlImporter";
 import { TwoLineChannelTextImporter } from "./importers/TwoLineChannelTextImporter";
+import { SealChatLogImporter } from "./importers/SealChatLogImporter";
 
 
 export class LogManager {
@@ -23,6 +24,7 @@ export class LogManager {
   }>(this);
 
   importers = [
+    ['sealChat', new SealChatLogImporter(this)],
     ['twoLineChannel', new TwoLineChannelTextImporter(this)],
     ['sealDice', new SealDiceLogImporter(this)],
     ['editLog', new EditLogImporter(this)],

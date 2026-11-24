@@ -29,6 +29,8 @@ export class SealDiceLogImporter extends LogImporter {
     const data = this.latestData as { items: LogItem[], version: number };
     let startText = '';
     for (let i of data.items) {
+      // SealChat's standard JSON uses the lower-case imUserId spelling.
+      i.IMUserId ||= (i as LogItem & { imUserId?: string }).imUserId || '';
       this.setCharInfo(charInfo, i);
       // 这个\r\n替换是为了防止logman因为新旧文本不同，导致重新格式化
       i.message = i.message.replaceAll('\r\n', '\n');

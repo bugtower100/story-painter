@@ -5,6 +5,7 @@ import { useStore } from "~/store";
 import { h, render } from 'vue'
 import PreviewItemNoavatar from '~/components/previews/preview-main-item-noavatar.vue'
 import { zipSync, strToU8 } from 'fflate'
+import { renderStyledLog, type StyledMessage } from './logStyle'
 // TODO: 移植到logMan/exporters
 
 function safeFilePart(v: string) {
@@ -12,17 +13,55 @@ function safeFilePart(v: string) {
 }
 
 function pickAvatar(store: ReturnType<typeof useStore>, item: LogItem) {
-  const id = packNameId(item)
-  const info = store.pcMap.get(id)
-  if (item.overrideAvatar) return item.overrideAvatar
+  return store.getAvatar(item)
+}
 
-  const name = info?.name || item.nickname
-  if (item.expressionTag) {
-    const m = store.workbench.pcNameExpressionsMap.get(name) || {}
-    const exp = m[item.expressionTag]
-    if (exp) return exp
+function workbenchLayoutCss() {
+  const w = useStore().workbench
+  const url = (v: string) => v ? `url(${JSON.stringify(v)})` : 'none'
+  return `:root { --log-font-size:${w.fontSize}px; --log-line-height:${w.lineHeight}; --log-avatar-size:${w.iconSize}px; --log-avatar-radius:${w.avatarRadius}px; --log-bubble-bg:${w.bubbleColor}; }
+  body { font-family:system-ui,sans-serif; margin:0; padding:24px; background-color:${w.globalBackgroundColor || '#f1eaf7'}; background-image:${url(w.backgroundImage)}; background-size:cover; }
+  .log-export-container { box-sizing:border-box; max-width:${w.contentWidth}px; margin:auto; padding:24px; background-color:${w.containerColor}; background-color:color-mix(in srgb, ${w.containerColor} ${w.containerOpacity}%, transparent); background-image:${url(w.containerBackgroundImage)}; background-size:cover; }
+  .log-export-container, .bubble.export { font-size:${w.fontSize}px; line-height:${w.lineHeight}; }
+  .log-node, .message-item.export { margin-bottom:${w.messageGap}px; overflow-wrap:anywhere; }
+  .icon.export { border-radius:${w.avatarRadius}px; }
+  .bubble { background-image:${url(w.bubbleBackgroundImage)}; background-size:cover; }
+  [data-log-slot="body"] { white-space:normal; } img { max-width:100%; } h1 { font-size:1.5em; }
+  @media(max-width:600px) { body { padding:8px; } .log-export-container { padding:12px; } }`
+}
+
+async function customStyleHtml(results: LogItem[], embedAssets: boolean) {
+  const store = useStore()
+  const el = document.createElement('div')
+  const messages: StyledMessage[] = []
+  for (const item of results) {
+    const pc = store.pcMap.get(packNameId(item))
+    if (item.isRaw || pc?.role === '隐藏') continue
+    render(h(PreviewItemNoavatar, { source: item }), el)
+    const body = el.querySelector('.list-item-dynamic > div')?.innerHTML || ''
+    messages.push({ name: item.nickname, identityKey: item.IMUserId, variantKey: item.expressionTag,
+      avatar: store.getAvatar(item), color: pc?.color || '#55445f', body,
+      time: store.exportOptions.timeHide ? '' : item.time ? dayjs.unix(item.time).format(store.exportOptions.yearHide ? 'HH:mm:ss' : 'YYYY/MM/DD HH:mm:ss') : item.timeText || '',
+      channel: item.groupName || item.commandInfo?.channel || 'main', messageType: item.isDice ? 'dice' : /^\s*[（(]/.test(item.message) ? 'ooc' : 'ic'
+    })
   }
-  return info?.avatar
+  render(null, el)
+  let html = renderStyledLog(store.workbench.stylePackage!, messages, store.workbench.title || '跑团记录', workbenchLayoutCss())
+  if (embedAssets) {
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const urls = [...new Set(Array.from(doc.images).map(img => img.getAttribute('src') || '').filter(src => src && !src.startsWith('data:')))]
+    for (const url of urls) {
+      try {
+        const response = await fetch(url)
+        if (!response.ok) continue
+        const blob = await response.blob()
+        const data = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsDataURL(blob) })
+        doc.querySelectorAll('img').forEach(img => { if (img.getAttribute('src') === url) img.setAttribute('src', data) })
+      } catch { /* Keep the original URL when a remote host disallows embedding. */ }
+    }
+    html = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML
+  }
+  return html
 }
 export function exportFileQQ(results: LogItem[], options: any = undefined) {
   const store = useStore();
@@ -210,8 +249,13 @@ function getDefaultFilename() {
   return `${line1 || '跑团记录'}.html`
 }
 
-export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
+export async function exportFileHtmlBubbleSingle(results: LogItem[], download = true) {
   const store = useStore();
+  if (store.workbench.useCustomStyle && store.workbench.stylePackage) {
+    const html = await customStyleHtml(results, download)
+    if (download) saveAs(new Blob([html], { type: 'text/html;charset=utf-8' }), getDefaultFilename())
+    return html
+  }
   const map = store.pcMap;
   const el = document.createElement('span');
   const output = []
@@ -246,7 +290,7 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
   await Promise.all(iconSources.map(async (src) => {
     const key = iconKeyBySource.get(src)
     if (!key) return
-    if (src.startsWith('data:')) {
+    if (!download || src.startsWith('data:')) {
       iconAssets[key] = src
       return
     }
@@ -373,7 +417,7 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
     }
   </style>
   `
-  html = html.replace('</body>', `${customCss}</body>`)
+  html = html.replace('</body>', `${customCss}<style>${workbenchLayoutCss()}</style></body>`)
 
   // Add has-background-image class if needed
   if (store.workbench.backgroundImage) {
@@ -381,12 +425,21 @@ export async function exportFileHtmlBubbleSingle(results: LogItem[]) {
   }
 
   const name = getDefaultFilename()
-  saveAs(new Blob([html], { type: 'text/html;charset=utf-8' }), name)
+  // Avoid waiting for remote font stylesheets whenever the live preview refreshes.
+  if (!download) html = html.replace(/<link\b[^>]*href=["']https:\/\/fonts\.(?:googleapis|gstatic)\.com[^>]*>/gi, '')
+  if (download) saveAs(new Blob([html], { type: 'text/html;charset=utf-8' }), name)
   return html
 }
 
 export function exportFileHtmlBubbleZip(results: LogItem[]) {
   const store = useStore();
+  if (store.workbench.useCustomStyle && store.workbench.stylePackage) {
+    return customStyleHtml(results, true).then(html => {
+      const zipped = zipSync({ 'index.html': strToU8(html) })
+      saveAs(new Blob([new Uint8Array(zipped)], { type: 'application/zip' }), getDefaultFilename().replace(/\.html$/, '.zip'))
+      return zipped
+    })
+  }
   const map = store.pcMap;
   const el = document.createElement('span');
   const files: Record<string, Uint8Array> = {}
@@ -521,7 +574,7 @@ export function exportFileHtmlBubbleZip(results: LogItem[]) {
     }
   </style>
   `
-  html = html.replace('</body>', `${customCss}</body>`)
+  html = html.replace('</body>', `${customCss}<style>${workbenchLayoutCss()}</style></body>`)
 
   // Add has-background-image class if needed
   if (store.workbench.backgroundImage) {

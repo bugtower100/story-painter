@@ -6,8 +6,8 @@
       <button :disabled="!history.past.length" title="Ctrl / ⌘ Z" @click="undo">撤销</button><button :disabled="!history.future.length" title="Ctrl / ⌘ Shift Z" @click="redo">重做</button><button @click="openWindow()">＋ 新建窗口</button><button class="lw-guide-button" @click="showGuide = true">使用说明</button>
     </div>
     <details class="lw-import" @dragover.prevent @drop.prevent="dropFiles">
-      <summary>追加导入多个文件 <span>选择或拖入 TXT / LOG · 保留来源文件名</span></summary>
-      <input ref="fileInput" type="file" multiple accept=".txt,.log" aria-label="追加日志文件" @change="chooseFiles" />
+      <summary>追加导入多个文件 <span>TXT / LOG / JSON / HTML / SealChat ZIP · 保留来源文件名</span></summary>
+      <input ref="fileInput" type="file" multiple accept=".txt,.log,.json,.html,.zip" aria-label="追加日志文件" @change="chooseFiles" />
       <div v-for="(file, index) in files" :key="index" class="lw-file-row"><span>{{ file.name }}</span><label>导入窗口 <input v-model="fileWindows[index]" aria-label="导入窗口" /></label></div>
       <div v-if="files.length" class="lw-toolbar"><label><input v-model="importPending" type="checkbox" /> 先放入待分拣</label><label><input v-model="importByTime" type="checkbox" :disabled="!!state.blocks.length" /> 合并后按时间排序</label><button :disabled="processing" @click="importFiles">{{ processing ? '正在导入…' : '追加合并' }}</button><span v-if="state.blocks.length">已有内容块，追加记录将接在末尾，保留当前编排。</span></div>
     </details>
@@ -69,6 +69,8 @@ import ContentBlockItem from '../components/ContentBlockItem.vue'
 import { PENDING_WINDOW, WorkspaceHistory, chronologicalEntries, contentUnits, createContentBlock, dissolveContentBlocks, entryId, extractBlockEntries, mergeContentBlocks, mergeParagraphs, moveEntries, normalizeBlocks, parseWorkspace, reconcileWorkspace, renameWindow, reorderContentUnits, reorderEntries, serializeWorkspace, splitParagraphs, validGroupName } from '../editor/listWorkspace'
 import type { WorkspaceEntry, WorkspaceState } from '../editor/listWorkspace'
 import { LogManager } from '../logManager/logManager'
+import { readLogFile } from '../logManager/importers/SealChatLogImporter'
+import { useStore } from '../store'
 import '../styles/workspace.scss'
 
 const props = defineProps<{ initialContent: string; active: boolean; sourceName: string; documentVersion: number }>()
@@ -288,14 +290,19 @@ const importFiles = async () => {
   try {
     const imported = await Promise.all(chosenFiles.map(async (file, index) => {
       const manager = new LogManager()
-      const text = await file.text()
+      const text = await readLogFile(file)
       const result = manager.parse(text)
       if (!result?.items.length) throw new Error(`${file.name} 未识别到日志发言，请先在文本编辑中导入并转换格式。`)
       const normalized = (result.startText || '') + manager.exporters.editLog.doExport(result.items)!.text
       const parsed = parseWorkspace(normalized, file.name)
-      return { ...parsed, entries: parsed.entries.map(e => ({ ...e, window: pending ? PENDING_WINDOW : labels[index].trim(), scene: pending ? '' : e.scene })) }
+      return { ...parsed, importedInfo: result, entries: parsed.entries.map(e => ({ ...e, window: pending ? PENDING_WINDOW : labels[index].trim(), scene: pending ? '' : e.scene })) }
     }))
     const entries = [...state.value.entries, ...imported.flatMap(s => s.entries)]
+    const store = useStore()
+    for (const source of imported) {
+      store.importCharacterAssets(source.importedInfo.characterAssets)
+      store.updatePcList(source.importedInfo.charInfo)
+    }
     let ordered = entries
     if (byTime) { try { ordered = chronologicalEntries(entries) } catch (error) { message.warning((error as Error).message) } }
     change({ ...state.value, entries: ordered, windows: [...new Set([...state.value.windows, ...ordered.map(e => e.window)])].filter(w => w !== PENDING_WINDOW), preamble: state.value.preamble + imported.map(s => s.preamble).join('') })

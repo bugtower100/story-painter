@@ -86,13 +86,13 @@
           </div>
           <div class="sp-editor-toolbar">
             <div class="sp-toolbar-actions">
-              <div class="sp-import-entry"><button class="sp-button sp-import-button" @click="ccfInput?.click()"><span aria-hidden="true">↥</span> 选择文件导入日志</button><small>TXT / LOG / JSON / CCF HTML · 替换当前日志</small></div>
+              <div class="sp-import-entry"><button class="sp-button sp-import-button" @click="ccfInput?.click()"><span aria-hidden="true">↥</span> 选择文件导入日志</button><small>TXT / LOG / JSON / HTML / SealChat ZIP · 替换当前日志</small></div>
               <button class="sp-button sp-button-small" @click="openAppendImport">追加多个文件</button>
               <button class="sp-text-button" @click="clearText">清空</button>
               <button class="sp-text-button" @click="doFlush">刷新</button>
             </div>
             <n-checkbox v-model:checked="store.doEditorHighlight" @click="doEditorHighlightClick($event)">编辑器染色</n-checkbox>
-            <input :ref="setCcfInputRef" type="file" accept=".txt,.log,.json,.html,text/plain,text/html,application/json" hidden @change="onCcfFileChange" />
+            <input :ref="setCcfInputRef" type="file" accept=".txt,.log,.json,.html,.zip,text/plain,text/html,application/json" hidden @change="onCcfFileChange" />
           </div>
           <n-spin :show="loading" class="sp-editor-body">
             <template #description>正在载入远程日志……</template>
@@ -108,7 +108,7 @@
           <div class="sp-editor-footer"><span>{{ store.pcList.length }} 位角色<span class="sp-footer-dot">·</span>{{ editorText.length.toLocaleString() }} 字符</span><span>支持海豹、QQ、CCF 等日志</span></div>
         </section>
       </div>
-      <section v-if="showWorkbench" class="sp-workbench sp-panel"><ccfolia-workbench @close="closeWorkbench" /></section>
+      <section v-if="showWorkbench" class="sp-workbench sp-panel"><ccfolia-workbench :items="logMan.curItems" @close="closeWorkbench" /></section>
       <footer class="sp-footer"><span>跑团log染色器-pry改版</span><span>Story Painter</span></footer>
     </main>
   </div>
@@ -150,6 +150,7 @@ import { parquetReadObjects } from 'hyparquet'
 import { asyncBufferFrom } from 'hyperparam'
 import { compressors } from 'hyparquet-compressors'
 import CcfoliaWorkbench from './pages/CcfoliaWorkbench.vue'
+import { readLogFile } from './logManager/importers/SealChatLogImporter'
 import OrbitMark from './components/OrbitMark.vue'
 import WisteriaDecoration from './components/WisteriaDecoration.vue'
 import LogListEditor from './pages/LogListEditor.vue'
@@ -281,7 +282,7 @@ function onAvatarFileChange(e: Event, i: CharItem) {
   const reader = new FileReader()
   reader.onload = () => {
     const url = reader.result as string
-    store.setAvatar(i.name, url)
+    store.setAvatar(i.name, url, i.IMUserId)
     message.success('头像已更新', { duration: 800 })
     input.value = ''
   }
@@ -294,7 +295,9 @@ async function onCcfFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files && input.files[0]
   if (!file) return
-  const text = await file.text()
+  let text: string
+  try { text = await readLogFile(file) }
+  catch (error) { message.error((error as Error).message); input.value = ''; return }
   setView('text')
   sourceName.value = file.name
   documentVersion.value++
@@ -659,6 +662,7 @@ function showPreview() {
 const store = useStore()
 store.colorMapLoad();
 store.avatarMapLoad();
+store.workbenchLoad();
 
 const editorText = ref('')
 watch(() => store.editor, (ed) => {
@@ -723,6 +727,7 @@ const saveCharacterIdentity = (character: CharItem, rawName: string, rawAccount:
   const target = store.pcList.find(pc => pc !== character && pc.name === name && pc.IMUserId === account)
   const keepOldName = store.pcList.some(pc => pc !== character && pc.name === previous.name)
   store.renamePcName(previous.name, name, keepOldName)
+  store.moveCharacterAssets(previous, name, account)
   if (target) store.pcList = store.pcList.filter(pc => pc !== character)
   else { character.name = name; character.IMUserId = account }
   listEditor.value?.updateCharacterIdentity(previous, name, account)
@@ -750,6 +755,7 @@ logMan.ev.on('textSet', (text) => {
 });
 
 logMan.ev.on('parsed', (ti: TextInfo) => {
+  store.importCharacterAssets(ti.characterAssets);
   store.updatePcList(ti.charInfo);
 })
 
