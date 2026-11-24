@@ -1,5 +1,5 @@
 <template>
-  <div class="sp-app">
+  <div class="sp-app" :class="{ 'is-workbench': showWorkbench }">
     <a class="sp-skip" href="#story-editor">跳到日志编辑区</a>
     <header v-show="!showWorkbench" class="sp-header">
       <div class="sp-brand">
@@ -175,7 +175,7 @@ onMounted(() => {
   // Keep the desktop editing area at its expanded size when sidebar sections close.
   editorSizeObserver = new ResizeObserver(() => {
     if (window.innerWidth > 800 && editorPanel.value) {
-      editorMinHeight.value = Math.max(editorMinHeight.value, editorPanel.value.getBoundingClientRect().height)
+      editorMinHeight.value = Math.max(editorMinHeight.value, editorPanel.value.offsetHeight)
     }
   })
   if (editorPanel.value) editorSizeObserver.observe(editorPanel.value)
