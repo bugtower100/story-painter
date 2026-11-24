@@ -415,7 +415,7 @@ export const useStore = defineStore('main', {
       }
     },
 
-    renamePcName(oldName: string, newName: string) {
+    renamePcName(oldName: string, newName: string, keepOldName = false) {
       if (!oldName || !newName) return
       if (oldName === newName) return
 
@@ -423,21 +423,21 @@ export const useStore = defineStore('main', {
       if (color && !this.pcNameColorMap.has(newName)) {
         this.pcNameColorMap.set(newName, color)
       }
-      this.pcNameColorMap.delete(oldName)
+      if (!keepOldName) this.pcNameColorMap.delete(oldName)
       this.colorMapSave()
 
       const avatar = this.pcNameAvatarMap.get(oldName)
       if (avatar && !this.pcNameAvatarMap.has(newName)) {
         this.pcNameAvatarMap.set(newName, avatar)
       }
-      this.pcNameAvatarMap.delete(oldName)
+      if (!keepOldName) this.pcNameAvatarMap.delete(oldName)
       this.avatarMapSave()
 
       const exps = this.workbench.pcNameExpressionsMap.get(oldName)
       if (exps) {
         const cur = this.workbench.pcNameExpressionsMap.get(newName) || {}
         this.workbench.pcNameExpressionsMap.set(newName, { ...exps, ...cur })
-        this.workbench.pcNameExpressionsMap.delete(oldName)
+        if (!keepOldName) this.workbench.pcNameExpressionsMap.delete(oldName)
       }
 
       try {
@@ -452,13 +452,13 @@ export const useStore = defineStore('main', {
 
         if (mapObj[oldName]) {
           mapObj[newName] = { ...(mapObj[oldName] || {}), ...(mapObj[newName] || {}) }
-          delete mapObj[oldName]
+          if (!keepOldName) delete mapObj[oldName]
           data.pcNameExpressionsMap = mapObj
         }
 
         if (mapKeysObj[oldName]) {
           mapKeysObj[newName] = { ...(mapKeysObj[oldName] || {}), ...(mapKeysObj[newName] || {}) }
-          delete mapKeysObj[oldName]
+          if (!keepOldName) delete mapKeysObj[oldName]
           data.pcNameExpressionsMapKeys = mapKeysObj
         }
 

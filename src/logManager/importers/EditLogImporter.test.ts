@@ -37,8 +37,7 @@ describe("editor log headers", () => {
 
     const exported = manager.exporters.editLog.doExport(result.items)!;
     const reparsed = manager.parse(exported.text)!;
-    // The fork's exporter deliberately appends two separator newlines per item.
-    expect(reparsed.items.map(item => ({ ...item, message: item.message.slice(0, -2) }))).toEqual(result.items);
+    expect(reparsed.items.map(item => ({ ...item, message: item.message.trimEnd() }))).toEqual(result.items.map(item => ({ ...item, message: item.message.trimEnd() })));
     expect(reparsed.charInfo).toEqual(result.charInfo);
   });
 

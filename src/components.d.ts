@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BbsList: typeof import('./components/previews/bbs-list.vue')['default']
+    CharacterIdentityEditor: typeof import('./components/CharacterIdentityEditor.vue')['default']
     CodeMirror: typeof import('./components/CodeMirror.vue')['default']
     ContentBlockItem: typeof import('./components/ContentBlockItem.vue')['default']
     LogListEditorItem: typeof import('./components/LogListEditorItem.vue')['default']

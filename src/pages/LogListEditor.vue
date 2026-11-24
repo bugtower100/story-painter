@@ -304,5 +304,16 @@ const importFiles = async () => {
   } catch (error) { message.error((error as Error).message) }
   finally { processing.value = false }
 }
-defineExpose({ flushPendingChanges })
+const openImport = () => {
+  const details = root.value?.querySelector<HTMLDetailsElement>('.lw-import')
+  if (details) { details.open = true; details.scrollIntoView({ block: 'nearest' }); fileInput.value?.focus() }
+}
+const updateCharacterIdentity = (previous: { name: string; IMUserId: string }, name: string, account: string) => {
+  state.value = { ...state.value, entries: state.value.entries.map(entry => ({ ...entry,
+    ...(entry.name === previous.name && entry.account === previous.IMUserId ? { name, account } : {}),
+    text: name === previous.name ? entry.text : entry.text.replaceAll(`<${previous.name}>`, `<${name}>`),
+  })) }
+  history.clear()
+}
+defineExpose({ flushPendingChanges, openImport, updateCharacterIdentity })
 </script>

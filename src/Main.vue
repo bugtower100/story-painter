@@ -28,18 +28,20 @@
 
       <div v-show="!showWorkbench" class="sp-workspace">
         <aside class="sp-sidebar" aria-label="日志设置">
-          <details class="sp-panel" open>
+          <nav v-if="store.pcList.length > 5" class="sp-settings-nav" aria-label="设置快捷跳转"><a href="#character-settings">角色</a><a href="#layout-settings">过滤排版</a><a href="#export-settings">导出log</a></nav>
+          <details id="character-settings" class="sp-panel" open>
             <summary class="sp-section-heading"><span><span class="sp-section-number">01</span>角色与配色</span><span class="sp-count">{{ store.pcList.length }} 位角色</span></summary>
             <div class="sp-panel-body">
               <div class="sp-section-note"><button class="sp-text-button" @click="refreshColors">刷新色板 ↻</button></div>
-              <div class="sp-character-list">
-                <div v-for="(i, index) in store.pcList" :key="i.IMUserId + ':' + index" class="sp-character">
+              <p class="sp-hint sp-identity-hint">修改后点保存；同名、同 ID 的角色会合并。</p>
+              <n-input v-if="store.pcList.length > 5" v-model:value="characterQuery" size="small" clearable placeholder="搜索名字或 ID" :input-props="{ 'aria-label': '搜索角色' }" class="sp-character-search" />
+              <div class="sp-character-list" tabindex="0" role="region" aria-label="角色列表，可在此区域滚动">
+                <div v-for="{ character: i, index } in visibleCharacters" :key="i.IMUserId + ':' + index" class="sp-character">
                   <button class="sp-avatar" :style="{ '--character-color': i.color }" :aria-label="'上传 ' + i.name + ' 的头像'" :disabled="previewActive" @click="avatarInputs[index]?.click()">
                     <img v-if="i.avatar" :src="i.avatar" alt="" /><span v-else>{{ i.name.slice(0, 1) }}</span>
                   </button>
                   <div class="sp-character-info">
-                    <n-input v-model:value="i.name" :disabled="previewActive" :input-props="{ 'aria-label': '角色名称' }" size="small" @focus="nameFocus(i)" @change="nameChanged(i)" />
-                    <span class="sp-character-id" :title="i.IMUserId">{{ i.IMUserId }}</span>
+                    <CharacterIdentityEditor :character="i" @save="(name, account) => saveCharacterIdentity(i, name, account)" />
                   </div>
                   <n-color-picker v-model:value="i.color" class="sp-character-color" :show-alpha="false" :swatches="colors" :on-update:value="(v) => colorChanged(v, i)" :aria-label="i.name + ' 的颜色'" />
                   <div class="sp-character-bottom">
@@ -50,17 +52,19 @@
                   <input :ref="el => avatarInputs[index] = el as HTMLInputElement" type="file" accept="image/*" hidden @change="(e) => onAvatarFileChange(e, i)" />
                 </div>
                 <p v-if="!store.pcList.length" class="sp-empty">导入或粘贴日志后，角色会出现在这里。</p>
+                <p v-else-if="!visibleCharacters.length" class="sp-empty">没有匹配的角色。</p>
               </div>
+              <p v-if="store.pcList.length > 2" class="sp-hint sp-scroll-hint">↕ 在列表内滚动查看其余角色</p>
               <button class="sp-workbench-link" @click="openWorkbenchFromButton"><span>头像与差分工作台<small>角色表情 · 背景 · 气泡 · 导出样式</small></span><span aria-hidden="true">↗</span></button>
             </div>
           </details>
 
-          <details class="sp-panel" open>
+          <details id="layout-settings" class="sp-panel" open>
             <summary class="sp-section-heading"><span><span class="sp-section-number">02</span>过滤与排版</span><span class="sp-chevron" aria-hidden="true">⌄</span></summary>
             <div class="sp-panel-body"><option-view /></div>
           </details>
 
-          <details class="sp-panel" open>
+          <details id="export-settings" class="sp-panel" open>
             <summary class="sp-section-heading"><span><span class="sp-section-number">03</span>导出log</span><span class="sp-chevron" aria-hidden="true">⌄</span></summary>
             <div class="sp-panel-body sp-export-actions" @click.capture="flushListChanges">
               <button class="sp-button sp-button-primary" @click="exportRecordHTMLSingle"><span>导出 HTML 单文件</span><span class="sp-button-icon" aria-hidden="true">↗</span></button>
@@ -82,7 +86,8 @@
           </div>
           <div class="sp-editor-toolbar">
             <div class="sp-toolbar-actions">
-              <button class="sp-button sp-button-small" @click="ccfInput?.click()"><span aria-hidden="true">↥</span> 导入日志</button>
+              <div class="sp-import-entry"><button class="sp-button sp-import-button" @click="ccfInput?.click()"><span aria-hidden="true">↥</span> 选择文件导入日志</button><small>TXT / LOG / JSON / CCF HTML · 替换当前日志</small></div>
+              <button class="sp-button sp-button-small" @click="openAppendImport">追加多个文件</button>
               <button class="sp-text-button" @click="clearText">清空</button>
               <button class="sp-text-button" @click="doFlush">刷新</button>
             </div>
@@ -135,7 +140,7 @@ import PreviewTableTRNoavatar from './components/previews/preview-table-tr-noava
 import { LogItem, CharItem, packNameId } from "./logManager/types";
 import { setCharInfo } from './logManager/importers/_logImpoter'
 import { applyQQImageRKeyReplacement, shouldApplyQQImageRKeyReplacement, msgCommandFormat, msgImageFormat, msgIMUseridFormat, msgOffTopicFormat, msgAtFormat } from "./utils";
-import { NButton, NText, useMessage, useModal, useNotification } from "naive-ui";
+import { NButton, useMessage, useModal, useNotification } from "naive-ui";
 import { LogoGithub, Delete as IconDelete } from '@vicons/carbon'
 import { useDark, useToggle } from '@vueuse/core'
 import OptionView from "./components/OptionView.vue";
@@ -148,6 +153,7 @@ import CcfoliaWorkbench from './pages/CcfoliaWorkbench.vue'
 import OrbitMark from './components/OrbitMark.vue'
 import WisteriaDecoration from './components/WisteriaDecoration.vue'
 import LogListEditor from './pages/LogListEditor.vue'
+import CharacterIdentityEditor from './components/CharacterIdentityEditor.vue'
 
 const listEditor = ref<InstanceType<typeof LogListEditor> | null>(null)
 const listVisited = ref(false)
@@ -155,6 +161,10 @@ const sourceName = ref('当前日志')
 const documentVersion = ref(0)
 let syncingList = false
 const flushListChanges = () => listEditor.value?.flushPendingChanges()
+const openAppendImport = async () => { setView('list'); await nextTick(); listEditor.value?.openImport() }
+const characterQuery = ref('')
+const visibleCharacters = computed(() => store.pcList.map((character, index) => ({ character, index })).filter(({ character }) => !characterQuery.value.trim() || `${character.name} ${character.IMUserId}`.toLocaleLowerCase().includes(characterQuery.value.trim().toLocaleLowerCase())))
+watch(() => store.pcList.length, count => { if (count <= 5) characterQuery.value = '' })
 const roleOptions = ['主持人', '角色', '骰子', '隐藏'].map(role => ({ value: role, label: role }))
 const views = [
   { id: 'text', label: '文本编辑' }, { id: 'list', label: '列表编辑' },
@@ -700,72 +710,28 @@ const deletePc = (index: number, i: CharItem) => {
   })
 }
 
-let lastPCName = ''
-
-const nameFocus = (i: CharItem) => {
-  lastPCName = i.name
-}
-
 let lastNameChange = 0;
-const nameChanged = (i: CharItem) => {
-  const now = Date.now();
-  if (now - lastNameChange < 100) return;
-  lastNameChange = now;
-
-  const oldName = lastPCName; // 这样做的原因是，如果按回车确认，那么 nameFocus 会在promise触发前触发一遍导致无效
-  const newName = i.name;
-  if (oldName && newName) {
-    const el = document.createElement('span');
-
-    render(h('span', `${oldName}`), el);
-    const name1 = el.innerHTML;
-
-    render(h('span', `${newName}`), el);
-    const name2 = el.innerHTML;
-
-    render(h('span', `<${oldName}>`), el);
-    const name1w = el.innerHTML;
-
-    render(h('span', `<${newName}>`), el);
-    const name2w = el.innerHTML;
-
-    const m = modal.create({
-      title: '名字变更',
-      preset: 'card',
-      style: {
-        width: '30rem',
-      },
-      content: () => [
-        h(
-            NText,
-            { innerHTML: `即将进行名字变更 <b>${name1} -> ${name2}</b><br />将修改信息行，并在文本中进行批量替换（${name1w} 替换为 ${name2w}），确定吗？` },
-        ),
-      ],
-      footer: () => [
-        h(
-            NButton,
-            { type: 'default', onClick: () => m.destroy(), style: { marginRight: '1rem' } },
-            () => '取消',
-        ),
-        h(
-            NButton,
-            {
-              type: 'primary', onClick: () => {
-                try {
-                  logMan.rename(i, oldName, newName)
-                  store.renamePcName(oldName, newName)
-                } catch (_e) {
-                  i.name = oldName;
-                } finally {
-                  m.destroy()
-                }
-              }
-            },
-            () => '确定'
-        ),
-      ]
-    })
+const saveCharacterIdentity = (character: CharItem, rawName: string, rawAccount: string) => {
+  const name = rawName.trim(), account = rawAccount.trim()
+  if (!name || /[\r\n]/.test(name) || !account || /[()\r\n]/.test(account)) {
+    message.warning('名字和 ID 不能为空；名字不能换行，ID 不能包含括号或换行。')
+    return
   }
+  if (name === character.name && account === character.IMUserId) return
+  flushListChanges()
+  const previous = { name: character.name, IMUserId: character.IMUserId }
+  const target = store.pcList.find(pc => pc !== character && pc.name === name && pc.IMUserId === account)
+  const keepOldName = store.pcList.some(pc => pc !== character && pc.name === previous.name)
+  store.renamePcName(previous.name, name, keepOldName)
+  if (target) store.pcList = store.pcList.filter(pc => pc !== character)
+  else { character.name = name; character.IMUserId = account }
+  listEditor.value?.updateCharacterIdentity(previous, name, account)
+  // Keep the current role, color and avatar while the editor receives new headers.
+  syncingList = true
+  try { logMan.changeIdentity(previous, name, account) }
+  finally { syncingList = false }
+  if (previewActive.value) showPreview()
+  message.success(target ? '已合并同名同 ID 的角色，保留目标角色的配色、身份和头像。' : '角色名字和 ID 已更新。')
 }
 
 
