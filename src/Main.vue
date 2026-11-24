@@ -35,7 +35,7 @@
               <div class="sp-section-note"><button class="sp-text-button" @click="refreshColors">刷新色板 ↻</button></div>
               <p class="sp-hint sp-identity-hint">修改后点保存；同名、同 ID 的角色会合并。</p>
               <n-input v-if="store.pcList.length > 5" v-model:value="characterQuery" size="small" clearable placeholder="搜索名字或 ID" :input-props="{ 'aria-label': '搜索角色' }" class="sp-character-search" />
-              <div class="sp-character-list" tabindex="0" role="region" aria-label="角色列表，可在此区域滚动">
+              <div id="character-list" class="sp-character-list" :class="{ 'is-expanded': charactersExpanded }" tabindex="0" role="region" aria-label="角色列表，可在此区域滚动">
                 <div v-for="{ character: i, index } in visibleCharacters" :key="i.IMUserId + ':' + index" class="sp-character">
                   <button class="sp-avatar" :style="{ '--character-color': i.color }" :aria-label="'上传 ' + i.name + ' 的头像'" :disabled="previewActive" @click="avatarInputs[index]?.click()">
                     <img v-if="i.avatar" :src="i.avatar" alt="" /><span v-else>{{ i.name.slice(0, 1) }}</span>
@@ -54,7 +54,10 @@
                 <p v-if="!store.pcList.length" class="sp-empty">导入或粘贴日志后，角色会出现在这里。</p>
                 <p v-else-if="!visibleCharacters.length" class="sp-empty">没有匹配的角色。</p>
               </div>
-              <p v-if="store.pcList.length > 2" class="sp-hint sp-scroll-hint">↕ 在列表内滚动查看其余角色</p>
+              <div v-if="visibleCharacters.length > 4" class="sp-character-list-controls">
+                <button class="sp-text-button" :aria-expanded="charactersExpanded" aria-controls="character-list" @click="charactersExpanded = !charactersExpanded">{{ charactersExpanded ? '收起角色列表' : '展开更多角色' }}</button>
+                <span v-if="visibleCharacters.length > (charactersExpanded ? 8 : 4)" class="sp-hint">↕ 可在列表内滚动</span>
+              </div>
               <button class="sp-workbench-link" @click="openWorkbenchFromButton"><span>头像与差分工作台<small>角色表情 · 背景 · 气泡 · 导出样式</small></span><span aria-hidden="true">↗</span></button>
             </div>
           </details>
@@ -79,7 +82,7 @@
           </details>
         </aside>
 
-        <section id="story-editor" class="sp-editor-panel sp-panel" aria-labelledby="editor-title" tabindex="-1">
+        <section id="story-editor" ref="editorPanel" class="sp-editor-panel sp-panel" :style="{ '--sp-editor-min-height': editorMinHeight + 'px' }" aria-labelledby="editor-title" tabindex="-1">
           <div class="sp-editor-heading"><div><h2 id="editor-title">日志编辑与预览</h2></div><span class="sp-status"><i></i>{{ loading ? '正在载入日志' : '准备就绪' }}</span></div>
           <div class="sp-view-tabs" role="group" aria-label="日志视图">
             <button v-for="view in views" :key="view.id" :aria-pressed="activeView === view.id" :class="{ 'is-active': activeView === view.id }" @click="setView(view.id)">{{ view.label }}</button>
@@ -116,7 +119,7 @@
 
 
 <script setup lang="ts">
-import { nextTick, ref, onMounted, watch, h, render, renderList, computed } from "vue";
+import { nextTick, ref, onMounted, onBeforeUnmount, watch, h, render, renderList, computed } from "vue";
 import { useStore } from './store'
 import CodeMirror from './components/CodeMirror.vue'
 import { debounce, delay } from 'lodash-es'
@@ -164,6 +167,20 @@ let syncingList = false
 const flushListChanges = () => listEditor.value?.flushPendingChanges()
 const openAppendImport = async () => { setView('list'); await nextTick(); listEditor.value?.openImport() }
 const characterQuery = ref('')
+const charactersExpanded = ref(false)
+const editorPanel = ref<HTMLElement>()
+const editorMinHeight = ref(0)
+let editorSizeObserver: ResizeObserver | undefined
+onMounted(() => {
+  // Keep the desktop editing area at its expanded size when sidebar sections close.
+  editorSizeObserver = new ResizeObserver(() => {
+    if (window.innerWidth > 800 && editorPanel.value) {
+      editorMinHeight.value = Math.max(editorMinHeight.value, editorPanel.value.getBoundingClientRect().height)
+    }
+  })
+  if (editorPanel.value) editorSizeObserver.observe(editorPanel.value)
+})
+onBeforeUnmount(() => editorSizeObserver?.disconnect())
 const visibleCharacters = computed(() => store.pcList.map((character, index) => ({ character, index })).filter(({ character }) => !characterQuery.value.trim() || `${character.name} ${character.IMUserId}`.toLocaleLowerCase().includes(characterQuery.value.trim().toLocaleLowerCase())))
 watch(() => store.pcList.length, count => { if (count <= 5) characterQuery.value = '' })
 const roleOptions = ['主持人', '角色', '骰子', '隐藏'].map(role => ({ value: role, label: role }))
