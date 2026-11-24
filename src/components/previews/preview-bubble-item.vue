@@ -38,17 +38,7 @@ import { escapeHTML, getCanvasFontSize, getTextWidth, msgAtFormat, msgCommandFor
 const store = useStore()
 const props = defineProps<{ source: LogItem }>()
 
-const avatar = computed(() => {
-  const id = packNameId(props.source)
-  const info = store.pcMap.get(id)
-  if (props.source.overrideAvatar) return props.source.overrideAvatar
-  if (!info) return ''
-  if (props.source.expressionTag) {
-    const m = store.workbench.pcNameExpressionsMap.get(info.name) || {}
-    if (m[props.source.expressionTag]) return m[props.source.expressionTag]
-  }
-  return info.avatar || ''
-})
+const avatar = computed(() => store.getAvatar(props.source))
 
 const initial = computed(() => props.source.nickname?.trim()?.charAt(0) || '?')
 

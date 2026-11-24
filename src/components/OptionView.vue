@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { NSwitch, NGrid, NGridItem } from 'naive-ui';
+import { NSwitch } from 'naive-ui';
 import { useStore } from '~/store';
 
 const option_store = useStore().exportOptions
-import { useDark, useToggle } from '@vueuse/core'
-
-const isDark = useDark({ disableTransition: false })
 
 interface Option {
   label: string
@@ -53,24 +50,10 @@ const list: Option[] = [
 </script>
 
 <template>
-  <n-grid cols="1 640:2" :x-gap="6" :y-gap="24" class="p-5">
-    <n-grid-item v-for="opt in list">
-      <n-flex align="center" justify="center" vertical>
-        <n-flex align="center" justify="center">
-          <n-switch v-model:value="option_store[opt.key]"></n-switch>
-          <strong>{{ opt.label }}</strong>
-        </n-flex>
-        <p>{{ opt.desc }}</p>
-      </n-flex>
-    </n-grid-item>
-    <n-grid-item>
-      <n-flex align="center" justify="center" vertical>
-        <n-flex align="center" justify="center">
-          <n-switch v-model:value="isDark" @on-update:value="useToggle"></n-switch>
-          <strong>深色模式展示</strong>
-        </n-flex>
-        <p>开启后，以深色模式展示，适合夜间使用</p>
-      </n-flex>
-    </n-grid-item>
-  </n-grid>
+  <div class="sp-options">
+    <label v-for="opt in list" :key="opt.key" class="sp-option" :title="opt.desc">
+      <span>{{ opt.label }}</span>
+      <n-switch v-model:value="option_store[opt.key]" size="small" :aria-label="opt.label" />
+    </label>
+  </div>
 </template>

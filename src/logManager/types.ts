@@ -7,6 +7,15 @@ export interface CharItem {
   avatar?: string
 }
 
+export interface CharacterAssets {
+  avatar?: string
+  expressions: Record<string, string>
+}
+
+export function characterAssetKey(name: string, account: string) {
+  return JSON.stringify([name, account])
+}
+
 export interface LogItem {
   id: number;
   nickname: string;

@@ -14,6 +14,7 @@ import { CcfoliaProjectImporter } from "./importers/CcfoliaProjectImporter";
 import { CcfoliaTextImporter } from "./importers/CcfoliaTextImporter";
 import { CcfoliaHtmlImporter } from "./importers/CcfoliaHtmlImporter";
 import { TwoLineChannelTextImporter } from "./importers/TwoLineChannelTextImporter";
+import { SealChatLogImporter } from "./importers/SealChatLogImporter";
 
 
 export class LogManager {
@@ -23,6 +24,7 @@ export class LogManager {
   }>(this);
 
   importers = [
+    ['sealChat', new SealChatLogImporter(this)],
     ['twoLineChannel', new TwoLineChannelTextImporter(this)],
     ['sealDice', new SealDiceLogImporter(this)],
     ['editLog', new EditLogImporter(this)],
@@ -67,6 +69,18 @@ export class LogManager {
     this.flush();
   }
 
+  changeIdentity(previous: Pick<CharItem, 'name' | 'IMUserId'>, name: string, account: string) {
+    for (const item of this.curItems) {
+      if (item.isRaw) continue;
+      if (item.nickname === previous.name && item.IMUserId === previous.IMUserId) {
+        item.nickname = name;
+        item.IMUserId = account;
+      }
+      if (name !== previous.name) item.message = item.message.replaceAll(`<${previous.name}>`, `<${name}>`);
+    }
+    this.flush();
+  }
+
   /**
    * 解析log
    * @param text 文本
@@ -99,6 +113,7 @@ export class LogManager {
       const { text, indexInfoList} = ret;
       this.lastText = text;
       this.lastIndexInfoList = indexInfoList;
+      this.curItems = indexInfoList.map(info => info.item);
       this.ev.emit('textSet', text);
     }
   }
@@ -126,6 +141,7 @@ export class LogManager {
           const { text, indexInfoList} = ret;
           this.lastText = text;
           this.lastIndexInfoList = indexInfoList;
+          this.curItems = indexInfoList.map(info => info.item);
           this.ev.emit('textSet', text);
         }
       }
@@ -199,7 +215,8 @@ export class LogManager {
             }
           }
 
-          const ret = this.exporters.editLog.doExport(rInfo.items, li.indexStart);
+          const contentOffset = li.indexStart + (left.length ? rInfo.startText.length : 0);
+          const ret = this.exporters.editLog.doExport(rInfo.items, contentOffset, !needFlush);
 
           if (ret) {
             const { text, indexInfoList} = ret;

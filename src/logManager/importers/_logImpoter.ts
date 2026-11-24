@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import type { LogManager } from "../logManager";
-import { CharItem, LogItem, packNameId } from "../types";
+import { CharItem, CharacterAssets, LogItem, packNameId } from "../types";
 
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
@@ -13,6 +13,7 @@ export interface TextInfo {
   startText: string;
   exporter?: string;
   version?: number;
+  characterAssets?: Record<string, CharacterAssets>;
 }
 
 export class LogImporter {

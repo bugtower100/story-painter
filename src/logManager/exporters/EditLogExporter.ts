@@ -4,7 +4,7 @@ import { LogItem } from "../types";
 
 // 编辑页面
 export class EditLogExporter extends LogExporter {
-  doExport(items: LogItem[], indexOffset = 0): LogExportInfo | undefined {
+  doExport(items: LogItem[], indexOffset = 0, preserveSpacing = false): LogExportInfo | undefined {
     let textAll = ""
     let index = 0 + indexOffset
     const indexInfoList = []
@@ -37,16 +37,20 @@ export class EditLogExporter extends LogExporter {
       }
       const expTag = i.expressionTag ? `#${i.expressionTag}` : ''
 
-      const channel = (i as any).commandInfo?.channel ? ` [${(i as any).commandInfo.channel}]` : ''
+      const groupName = i.groupName || i.commandInfo?.channel
+      const channel = groupName ? ` [${groupName}]` : ''
       text += `${i.nickname}${imuid}${expTag} ${timeText}${channel}${idSuffix}\n`
       index = indexOffset + textAll.length + text.length
       let indexContent = index
       const body = (i.message || '').replaceAll('<br />', '\n')
-      text += `${body}\n\n`
+      // Imports/refreshes use one blank separator; incremental editor offsets must
+      // retain the exact whitespace the user is currently typing.
+      const message = preserveSpacing ? body : body.replace(/\n+$/, '') + '\n\n'
+      text += message
       index = indexOffset + textAll.length + text.length
       let indexEnd = index
 
-      const indexInfo = { indexStart, indexContent, indexEnd, item: i };
+      const indexInfo = { indexStart, indexContent, indexEnd, item: { ...i, message } };
       indexInfoList.push(indexInfo);
       textAll += text
     }

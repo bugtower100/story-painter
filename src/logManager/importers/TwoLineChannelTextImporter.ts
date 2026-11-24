@@ -23,11 +23,12 @@ export class TwoLineChannelTextImporter extends LogImporter {
     const lines = text.split(/\r?\n/)
     const charInfo = new Map<string, CharItem>()
     const items: LogItem[] = []
+    const startLines: string[] = []
     let idx = 0
     while (idx < lines.length) {
       const header = lines[idx]
       const m = header.replace(/^\s*-\s+/, '').match(headerRe)
-      if (!m) { idx += 1; continue }
+      if (!m) { if (!items.length) startLines.push(header); idx += 1; continue }
       const nickname = m[1].trim()
       const imuidRaw = m[2] ? m[2].slice(1, -1).trim() : ''
       const expressionTagRaw = (m[5] || '').trim()
@@ -36,12 +37,11 @@ export class TwoLineChannelTextImporter extends LogImporter {
       const channel = channelRaw.toLowerCase()
       idx += 1
       const bodyLines: string[] = []
-      while (idx < lines.length && lines[idx].trim() !== '') {
+      // Blank lines can separate paragraphs inside a message. Only a new header ends it.
+      while (idx < lines.length && !headerRe.test(lines[idx].replace(/^\s*-\s+/, ''))) {
         bodyLines.push(lines[idx])
         idx += 1
       }
-      // 跳过空行
-      while (idx < lines.length && lines[idx].trim() === '') idx += 1
 
       const item = {} as LogItem
       item.id = items.length
@@ -51,7 +51,7 @@ export class TwoLineChannelTextImporter extends LogImporter {
       item.time = t
       item.timeText = tt
       if (expressionTagRaw) item.expressionTag = expressionTagRaw
-      const body = bodyLines.join('\n').trim()
+      const body = bodyLines.join('\n').replace(/\n+$/, '')
       item.message = body
       item.isDice = isDiceMessage(body)
       item.commandId = 0
@@ -62,6 +62,6 @@ export class TwoLineChannelTextImporter extends LogImporter {
       this.setCharInfo(charInfo, item)
       items.push(item)
     }
-    return { items, charInfo, startText: '' }
+    return { items, charInfo, startText: startLines.length ? startLines.join('\n') + '\n' : '' }
   }
 }
